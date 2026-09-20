@@ -47,6 +47,7 @@ Los mapas convencionales están pensados para vehículos livianos y no comprende
                                               ▼
                                     [ BD PostgreSQL + PostGIS ]# 🚛 TRAVEL CC — La Ruta que Aprende
 
+```
 ---
 
 ## 🤖 Declaración de Uso de Inteligencia Artificial
