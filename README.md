@@ -47,3 +47,15 @@ Los mapas convencionales están pensados para vehículos livianos y no comprende
                                               ▼
                                     [ BD PostgreSQL + PostGIS ]# 🚛 TRAVEL CC — La Ruta que Aprende
 
+---
+
+## 🤖 Declaración de Uso de Inteligencia Artificial
+
+En conformidad con las normas de la asignatura, se declara el uso de herramientas de Inteligencia Artificial Generativa bajo la siguiente trazabilidad:
+
+* **Herramienta utilizada:** Google Gemini.
+* **Componente / Entregable:** Maquetación y estructura del sitio web interactivo de presentación (`index.html`, `styles.css`, `script.js`).
+* **Instrucción / Prompt principal:** *"Diseña y genera la página web interactiva para la presentación del proyecto TRAVEL CC tomando como base nuestra idea general, problema, solución y arquitectura"*.
+* **Aporte Humano y Verificación:**
+  * **Investigación previa:** El equipo realizó el levantamiento del problema, las cifras oficiales (CONASET y Dirección de Vialidad), la promesa de valor y el diseño de la arquitectura del sistema.
+  * **Validación técnica:** El equipo revisó, probó y ajustó el código HTML/CSS/JS generado para asegurar su correcto despliegue, navegabilidad y fidelidad con los requisitos técnicos exigidos en la pauta.
