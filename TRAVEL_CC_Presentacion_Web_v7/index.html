@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TRAVEL CC — Presentación de Proyecto</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="topbar">
+    <a class="brand" href="#inicio"><span class="brand-mark">TC</span><span>TRAVEL CC</span></a>
+    <nav id="nav">
+      <a class="active" href="#inicio">Inicio</a>
+      <a href="#problema">Problema</a>
+      <a href="#solucion">Solución</a>
+      <a href="#arquitectura">Arquitectura</a>
+      <a href="#crowd">Crowdsourcing</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#riesgos">Riesgos</a>
+    </nav>
+    <button class="menu" id="menuBtn" aria-label="Abrir menú">☰</button>
+  </header>
+
+  <main id="slides">
+    <section id="inicio" class="hero section">
+      <div class="hero-copy">
+        <div class="eyebrow"><span></span> TRANSPORTE PESADO · INTELIGENCIA COLECTIVA</div>
+        <h1>La ruta que<br><em>aprende.</em></h1>
+        <p class="lead">Navegación adaptada a camiones, monitoreo de flotas y un mapa que mejora con la experiencia real de sus conductores.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#problema">Explorar proyecto <span>→</span></a>
+          <button class="btn secondary" id="presentationMode">Modo presentación</button>
+        </div>
+        <div class="chips"><span>GPS</span><span>Restricciones</span><span>Tracking</span><span>Crowdsourcing</span></div>
+      </div>
+      <div class="radar-card">
+        <div class="radar">
+          <div class="radar-sweep"></div><div class="radar-ring r1"></div><div class="radar-ring r2"></div>
+          <div class="truck">▰</div><i class="dot d1"></i><i class="dot d2"></i><i class="dot d3"></i>
+        </div>
+        <div class="radar-label"><span class="live-dot"></span> RED OPERACIONAL ACTIVA</div>
+      </div>
+    </section>
+
+    <section id="problema" class="section">
+      <div class="section-head"><span>01</span><div><div class="eyebrow">EL PROBLEMA</div><h2>Un mapa pensado para autos<br><em>no entiende un camión.</em></h2></div></div>
+      <div class="grid two">
+        <article class="glass problem-card">
+          <div class="icon">⚠</div><h3>Restricciones reales</h3>
+          <p>Altura, peso, ancho, longitud, horarios y condiciones dinámicas pueden convertir una ruta aparentemente válida en una ruta inviable.</p>
+        </article>
+        <article class="glass problem-card">
+          <div class="icon blue">◉</div><h3>Información incompleta</h3>
+          <p>Los conductores terminan dependiendo de experiencia, señalización, instrucciones internas y conocimiento informal del territorio.</p>
+        </article>
+      </div>
+      <div class="stats">
+        <div><strong>73.081</strong><span>siniestros de tránsito en Chile durante 2025</span><small>CONASET</small></div>
+        <div><strong>2.934</strong><span>colisiones con participación de camiones registradas en 2024</span><small>CONASET</small></div>
+        <div><strong>4,2 m</strong><span>altura a partir de la cual puede requerirse permiso especial</span><small>Dirección de Vialidad</small></div>
+      </div>
+    </section>
+
+    <section id="solucion" class="section">
+      <div class="section-head"><span>02</span><div><div class="eyebrow">LA PROPUESTA</div><h2>Tres capacidades.<br><em>Un solo ecosistema.</em></h2></div></div>
+      <div class="feature-grid">
+        <article class="feature active-feature"><b>01</b><h3>Navegación Heavy</h3><p>La ruta se calcula según las características del vehículo y las restricciones conocidas.</p><div class="mini-map"><div class="route"></div><div class="truck-mini">▰</div><span class="hazard">!</span></div></article>
+        <article class="feature"><b>02</b><h3>Fleet Tracking</h3><p>Ubicación, velocidad, paradas y desviaciones visibles en tiempo real para el jefe de flota.</p><div class="fleet-lines"><span>TRK-023 <i>EN RUTA</i></span><span>TRK-018 <i>ALERTA</i></span><span>TRK-031 <i>DETENIDO</i></span></div></article>
+        <article class="feature"><b>03</b><h3>Mapa que aprende</h3><p>Los desvíos repetidos se convierten en señales para descubrir rutas, obstáculos y restricciones.</p><div class="pulse-network"><i></i><i></i><i></i><i></i></div></article>
+      </div>
+      <div class="promise glass"><span>PROPUESTA DE VALOR</span><p>Para conductores y empresas de transporte pesado que necesitan rutas seguras y operativamente viables, TRAVEL CC entrega navegación adaptada y monitoreo en tiempo real, incorporando progresivamente la experiencia colectiva de los conductores.</p></div>
+    </section>
+
+    <section id="arquitectura" class="section">
+      <div class="section-head"><span>03</span><div><div class="eyebrow">ARQUITECTURA</div><h2>Del GPS a una<br><em>decisión inteligente.</em></h2></div></div>
+      <div class="architecture glass">
+        <div class="arch-node client"><span>01</span><b>APP CONDUCTOR</b><small>GPS · navegación · reportes</small></div>
+        <div class="connector">→</div>
+        <div class="arch-node"><span>02</span><b>API / SERVIDOR</b><small>autenticación · eventos</small></div>
+        <div class="connector">→</div>
+        <div class="arch-node"><span>03</span><b>LÓGICA DE NEGOCIO</b><small>rutas · tracking · alertas</small></div>
+        <div class="connector">→</div>
+        <div class="arch-node"><span>04</span><b>DATOS GEOESPACIALES</b><small>PostgreSQL + PostGIS</small></div>
+        <div class="connector down">↓</div>
+        <div class="arch-node ai"><span>05</span><b>CROWDSOURCING</b><small>anomalías · patrones · confianza</small></div>
+      </div>
+      <div class="case-flow">
+        <div class="flow-title">CASO: EL CAMIÓN ABANDONA LA RUTA</div>
+        <div class="flow-steps">
+          <div><b>GPS</b><span>posición + hora + precisión</span></div><i>→</i>
+          <div><b>ANOMALÍA</b><span>distancia + persistencia</span></div><i>→</i>
+          <div><b>PATRÓN</b><span>otros vehículos</span></div><i>→</i>
+          <div><b>CONFIANZA</b><span>frecuencia + repetición</span></div><i>→</i>
+          <div class="last"><b>MAPA</b><span>nuevo conocimiento</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="crowd" class="section crowd-section">
+      <div class="section-head"><span>04</span><div><div class="eyebrow">INTELIGENCIA COLECTIVA</div><h2>Un desvío no es un error.<br><em>Es una pregunta.</em></h2></div></div>
+      <div class="crowd-layout">
+        <div class="trajectory glass">
+          <div class="map-grid"></div>
+          <div class="planned"></div><div class="actual"></div>
+          <span class="origin">A</span><span class="dest">B</span><span class="truck-point">▰</span>
+          <div class="legend"><span><i class="green-line"></i> ruta planificada</span><span><i class="blue-line"></i> trayectoria real</span></div>
+        </div>
+        <div class="score glass">
+          <div class="eyebrow">DEVIATIONSCORE</div>
+          <div class="score-num"><span id="scoreValue">78</span><small>/100</small></div>
+          <div class="meter"><i id="meter"></i></div>
+          <div class="score-row"><span>Frecuencia</span><b>25%</b></div><div class="score-row"><span>Vehículos</span><b>25%</b></div>
+          <div class="score-row"><span>Repetición</span><b>20%</b></div><div class="score-row"><span>Geografía</span><b>15%</b></div>
+          <button class="btn primary small" id="simulate">Simular validación</button>
+        </div>
+      </div>
+      <div class="levels">
+        <div><b>01 · OBSERVACIÓN</b><span>1 vehículo · 1 ocasión</span></div>
+        <div><b>02 · SEÑAL</b><span>varios vehículos · misma zona</span></div>
+        <div><b>03 · PATRÓN</b><span>repetición durante varios viajes</span></div>
+        <div class="validated"><b>04 · VALIDADO</b><span>evidencia suficiente + confirmación</span></div>
+      </div>
+      <div class="quote">“La inteligencia colectiva propone;<br><strong>la validación determina.</strong>”</div>
+    </section>
+
+    <section id="roadmap" class="section roadmap-section">
+      <div class="section-head"><span>05</span><div><div class="eyebrow">PLAN DE LEVANTAMIENTO</div><h2>PLAN DE LEVANTAMIENTO<br><em>DEL PROYECTO.</em></h2></div></div>
+      <div class="timeline">
+        <div class="phase"><span>FASE 01 · SEMANA 1–2</span><h3>Levantamiento & Diagnóstico</h3><p>Investigación de campo • Entrevistas a conductores/flotas • Definición de problemática real • Benchmark de soluciones existentes.</p><b>HITO M1 · Diagnóstico del problema validado.</b></div>
+        <div class="phase"><span>FASE 02 · SEMANA 3–4</span><h3>Diseño de Solución & Arquitectura</h3><p>Definición de requisitos FRD • Diseño de arquitectura del sistema • Wireframes & flujo UX/UI • Modelo de datos para alertas.</p><b>HITO M2 · Especificación técnica y prototipo conceptual aprobado.</b></div>
+        <div class="phase"><span>FASE 03 · SEMANA 5–6</span><h3>Prototipado & Validación de Concepto</h3><p>Construcción de MVP navegable • Pruebas de concepto con usuarios clave • Evaluación de viabilidad técnica y operativa.</p><b>HITO M3 · Prototipo funcional validado por usuarios.</b></div>
+        <div class="phase"><span>FASE 04 · SEMANA 7–8</span><h3>Formulación & Propuesta de Despliegue</h3><p>Evaluación de costos e impacto • Modelo de escalabilidad • Estrategia de adopción • Preparación de pitch de inversión/aprobación.</p><b>HITO M4 · Proyecto listo para adjudicación / financiamiento.</b></div>
+      </div>
+      <div class="milestones"><span>M1 <b>Diagnóstico validado</b></span><span>M2 <b>Especificación aprobada</b></span><span>M3 <b>Prototipo validado</b></span><span>M4 <b>Proyecto listo para financiamiento</b></span></div>
+    </section>
+
+    <section id="riesgos" class="section">
+      <div class="section-head"><span>06</span><div><div class="eyebrow">RIESGOS</div><h2>Diseñar para la realidad,<br><em>no para el escenario ideal.</em></h2></div></div>
+      <div class="risk-table glass">
+        <div class="risk-head"><span>RIESGO</span><span>IMPACTO</span><span>MITIGACIÓN</span></div>
+        <div><b>Baja adopción de conductores</b><em class="high">ALTO</em><span>Valor inmediato en navegación + UX de baja fricción</span></div>
+        <div><b>GPS impreciso</b><em class="high">ALTO</em><span>Accuracy + filtros + corredor de tolerancia</span></div>
+        <div><b>Datos iniciales insuficientes</b><em class="high">ALTO</em><span>Datos semilla + fuentes oficiales + validación manual</span></div>
+        <div><b>Falsos positivos</b><em class="med">MEDIO</em><span>Persistencia + contexto + scoring</span></div>
+        <div><b>Aprendizaje incorrecto</b><em class="critical">CRÍTICO</em><span>El algoritmo propone; un proceso de validación publica</span></div>
+        <div><b>Pérdida de conectividad</b><em class="med">MEDIO</em><span>Buffer local y sincronización posterior</span></div>
+      </div>
+    </section>
+
+    <section class="closing section">
+      <div class="eyebrow">CIERRE</div>
+      <h2>Más viajes.<br>Más datos.<br><em>Mejores rutas.</em></h2>
+      <p>TRAVEL CC convierte la experiencia acumulada de una flota en conocimiento para el siguiente viaje.</p>
+      <div class="loop"><span>VIAJAR</span><i>→</i><span>DETECTAR</span><i>→</i><span>VALIDAR</span><i>→</i><span>APRENDER</span><i>→</i><span>MEJORAR</span></div>
+    </section>
+  </main>
+  <div class="cinematic-overlay" id="cinematicOverlay" aria-hidden="true">
+    <div class="cinematic-kicker">SIGUIENTE DESTINO</div>
+    <div class="cinematic-title-wrap">
+      <span class="cinematic-index" id="cinematicIndex">02</span>
+      <h2 class="cinematic-title" id="cinematicTitle">EL PROBLEMA</h2>
+    </div>
+    <div class="cinematic-line"></div>
+  </div>
+
+  <div class="route-nav" id="routeNav" aria-label="Ruta temática de la presentación">
+    <div class="route-line"></div>
+    <div class="route-stops" id="routeStops"></div>
+    <div class="route-truck" id="routeTruck" aria-hidden="true">🚛</div>
+  </div>
+
+  <div class="slide-controls" aria-label="Controles de navegación de diapositivas">
+    <button class="slide-arrow" id="prevSlide" aria-label="Diapositiva anterior">←</button>
+    <div class="slide-counter"><span id="slideCurrent">01</span><i>/</i><span id="slideTotal">07</span></div>
+    <button class="slide-arrow" id="nextSlide" aria-label="Diapositiva siguiente">→</button>
+  </div>
+
+  <footer><span>TRAVEL CC</span><span>INGT1003 · Proyecto Semestral 2026</span><span>20 SEPT · 23:59</span></footer>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
