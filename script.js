@@ -404,12 +404,7 @@ document.getElementById('simulate').addEventListener('click', ()=>{
   },100);
 });
 
-const presentationBtn = document.getElementById('presentationMode');
-presentationBtn.addEventListener('click',()=>{
-  presentation = !presentation;
-  document.body.classList.toggle('presentation', presentation);
-  presentationBtn.textContent = presentation ? 'Salir de presentación' : 'Modo presentación';
-});
+
 
 document.addEventListener('keydown',(e)=>{
   if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){
