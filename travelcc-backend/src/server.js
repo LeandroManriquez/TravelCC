@@ -38,7 +38,7 @@ const authLimiter = rateLimit({
 // app.use('/api/v1/auth', authLimiter); // Lo dejamos listo para cuando integremos Supabase Auth
 
 // 4. Parseador de JSON con límite de tamaño
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: '100kb' }));
 
 // 5. Ruta de Health-Check
 app.get('/health', (req, res) => {
@@ -49,7 +49,7 @@ app.get('/health', (req, res) => {
 });
 
 // 6. Manejador para rutas no encontradas (404)
-app.all('*', (req, res, next) => {
+app.all(/(.*)/, (req, res, next) => {
   next(new AppError(`La ruta ${req.originalUrl} no existe en este servidor`, 404, 'ERR_SYS_NOT_FOUND'));
 });
 
