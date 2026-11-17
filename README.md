@@ -10,7 +10,7 @@
 | :--- | :--- | :--- |
 | **Leandro Manríquez** | [@LeandroManriquez](https://github.com/LeandroManriquez) | Coordinación 
 | **Ignacia Quiroz** | [@igna-Quiroz](https://github.com/igna-Quiroz) | Documentación 
-
+| **Benjamin Soto** | [@brocklets](https://github.com/benjasog) | Documentación, Soporte
 ---
 
 ## 📚 Información Académica
