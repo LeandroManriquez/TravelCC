@@ -1,14 +1,13 @@
 const { z } = require('zod');
 const AppError = require('../utils/appError');
 
-// Esquema para un solo punto de telemetría (Estándar WGS 84)
 const telemetryPointSchema = z.object({
-  device_id: z.string().min(1, 'El ID del dispositivo es obligatorio'),
-  latitude: z.number().min(-90).max(90, 'Latitud inválida (debe estar entre -90 y 90)'),
-  longitude: z.number().min(-180).max(180, 'Longitud inválida (debe estar entre -180 y 180)'),
-  speed: z.number().nonnegative('La velocidad no puede ser negativa'),
-  heading: z.number().min(0).max(360).optional(), // Dirección en grados (0-360)
-  timestamp: z.string().datetime('El timestamp debe tener formato ISO 8601 válido')
+  truck_id: z.string().min(1, 'El ID del camión es obligatorio'),
+  lat: z.number().min(-90).max(90, 'Latitud inválida (debe estar entre -90 y 90)'),
+  lng: z.number().min(-180).max(180, 'Longitud inválida (debe estar entre -180 y 180)'),
+  speed_kmh: z.number().nonnegative('La velocidad no puede ser negativa').optional(),
+  heading: z.number().min(0).max(360).optional(),
+  recorded_at: z.string().datetime('El recorded_at debe tener formato ISO 8601 válido').optional()
 });
 
 // Esquema principal que permite recibir un punto único o un arreglo (Batching por cortes de 4G)

@@ -2,14 +2,14 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!supabaseUrl || !supabaseSecretKey) {
   throw new Error('Faltan las credenciales de Supabase en el archivo .env');
 }
 
 // Cliente configurado sin persistencia de sesión (Stateless backend)
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+const supabase = createClient(supabaseUrl, supabaseSecretKey, {
   auth: {
     persistSession: false,
     autoRefreshToken: false

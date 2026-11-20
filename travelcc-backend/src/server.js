@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const telemetryRoutes = require('./routes/telemetryRoutes');
 const rateLimit = require('express-rate-limit');
+const routeRoutes = require('./routes/routeRoutes');
 require('dotenv').config();
 
 const logger = require('./utils/logger');
@@ -20,7 +22,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// 3. Rate Limiter Estricto exclusivo para rutas de Autenticación / Login 
+// 3. Rate Limiter Estricto exclusivo para rutas de Autenticación / Login
 // (Protege contra fuerza bruta, sin afectar la telemetría GPS de los camiones)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
@@ -48,7 +50,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-// 6. Manejador para rutas no encontradas (404)
+// 6. Rutas principales y manejador para rutas no encontradas (404)
+app.use('/api/v1/routes', routeRoutes);
+app.use('/api/v1/telemetry', telemetryRoutes);
 app.all(/(.*)/, (req, res, next) => {
   next(new AppError(`La ruta ${req.originalUrl} no existe en este servidor`, 404, 'ERR_SYS_NOT_FOUND'));
 });
