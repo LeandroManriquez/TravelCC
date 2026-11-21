@@ -1,0 +1,17 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno y secretos (¡nunca subir a GitHub!)
+.env
+.env.*
+!.env.example
+
+# Logs y archivos temporales
+logs/
+*.log
+
+# Sistema operativo / editores
+.DS_Store
+Thumbs.db
+
+data/
