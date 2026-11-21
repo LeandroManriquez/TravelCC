@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-
 import '../viewmodels/dashboard_viewmodel.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -17,144 +16,130 @@ class DashboardView extends StatelessWidget {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          backgroundColor: AppColors.background,
-          title: const Text('TRAVEL CC', style: AppTypography.headlineMedium),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          title: const Text(
+            'TRAVEL CC',
+            style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 20),
+          ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.logout, color: AppColors.textMuted),
-              onPressed: () => context.goNamed('login'),
+              icon: const Icon(Icons.notifications_outlined, color: AppColors.textPrimary),
+              onPressed: () {},
             ),
           ],
         ),
-        body: Consumer<DashboardViewModel>(
-          builder: (context, vm, child) {
-            return Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Resumen de Flota',
-                    style: AppTypography.headlineMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Tarjetas de estadísticas
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          'Camiones Activos',
-                          '${vm.activeTrucks}',
-                          Icons.local_shipping,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Resumen de Flota',
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                
+                Consumer<DashboardViewModel>(
+                  builder: (context, vm, child) {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard('Camiones Activos', '${vm.activeTrucks}', Icons.local_shipping, AppColors.success, context, 'fleet'),
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: _buildStatCard(
-                          'Alertas',
-                          '${vm.pendingAlerts}',
-                          Icons.warning_amber,
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: _buildStatCard('Alertas', '${vm.pendingAlerts}', Icons.warning_amber_rounded, AppColors.primary, context, 'alerts'),
                         ),
-                      ),
-                    ],
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Consumer<DashboardViewModel>(
+                  builder: (context, vm, child) {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard('Rutas Completadas', '${vm.completedRoutes}%', Icons.check_circle_outline, AppColors.secondary, context, null),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        const Expanded(child: SizedBox()),
+                      ],
+                    );
+                  },
+                ),
+                
+                const SizedBox(height: AppSpacing.xxl),
+                const Text(
+                  'Accesos Rápidos',
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.goNamed('map'),
+                    icon: const Icon(Icons.map, color: Colors.white),
+                    label: const Text('Ver Mapa en Vivo', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.sm)),
+                    ),
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  _buildStatCard(
-                    'Rutas Completadas',
-                    '${vm.completedRoutes}%',
-                    Icons.check_circle,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton.icon(
+                    onPressed: () => context.goNamed('fleet'),
+                    icon: const Icon(Icons.list_alt, color: Colors.white),
+                    label: const Text('Gestión de Conductores', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.panel,
+                      foregroundColor: AppColors.textPrimary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.sm), side: const BorderSide(color: AppColors.buttonSmallBorder)),
+                    ),
                   ),
-
-                  const SizedBox(height: AppSpacing.xxl),
-                  const Text(
-                    'Accesos Rápidos',
-                    style: AppTypography.headlineMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-
-                  // Botón 1: Ver Mapa en Vivo (ESTE ES EL QUE NAVEGA AL MAPA)
-                  _buildMenuButton(
-                    'Ver Mapa en Vivo',
-                    Icons.map,
-                    onPressed: () =>
-                        context.goNamed('map'), // ← AQUÍ ESTÁ LA MAGIA
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-
-                  // Botón 2: Gestión de Conductores (aún no hace nada)
-                  _buildMenuButton(
-                    'Gestión de Conductores',
-                    Icons.people,
-                    onPressed: () {
-                      debugPrint('Navegando a Gestión de Conductores...');
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  // Widget reutilizable para las tarjetas (Aplicando DRY)
-  Widget _buildStatCard(String title, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.panel,
-        borderRadius: BorderRadius.circular(AppSpacing.sm),
-        border: Border.all(color: AppColors.buttonSmallBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: AppColors.primary, size: 28),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            title,
-            style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  // Widget reutilizable para los botones del menú (Aplicando DRY)
-  Widget _buildMenuButton(
-    String text,
-    IconData icon, {
-    required VoidCallback onPressed,
-  }) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: OutlinedButton.icon(
-        onPressed: onPressed, // ← Aquí recibe la acción desde arriba
-        icon: Icon(icon, color: AppColors.primary),
-        label: Text(
-          text,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
+  Widget _buildStatCard(String title, String value, IconData icon, Color color, BuildContext context, String? routeName) {
+    return GestureDetector(
+      onTap: routeName != null ? () => context.goNamed(routeName) : null,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.panel,
+          borderRadius: BorderRadius.circular(AppSpacing.md),
+          border: Border.all(color: AppColors.buttonSmallBorder),
         ),
-        style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.buttonSmallBorder),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.sm),
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              value,
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              title,
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+            ),
+          ],
         ),
       ),
     );
