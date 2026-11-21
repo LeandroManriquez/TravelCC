@@ -1,5 +1,5 @@
 name: travel_cc
-description: "A new Flutter project."
+description: "Aplicación de navegación y telemetría para transporte pesado."
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -10,22 +10,27 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  
-  # --- Nuestras dependencias para Clean Architecture + MVVM ---
+
+  # Estado y navegación
   provider: ^6.1.2
+  go_router: ^14.2.0
+
+  # Inyección de dependencias
   get_it: ^7.7.0
   injectable: ^2.4.4
-  go_router: ^14.2.0
+
+  # Mapa (OpenStreetMap sin API key)
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  
-  # --- Herramientas para generar código automáticamente ---
+
+  # Generación de código
   build_runner: ^2.4.11
   injectable_generator: ^2.6.2
 
 flutter:
   uses-material-design: true
-  
