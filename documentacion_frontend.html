@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentación Técnica y de Aprendizaje: TRAVEL CC</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #e8e8e8;
+    color: #1a1a1a;
+    line-height: 1.6;
+    padding: 20px;
+  }
+  .document {
+    max-width: 850px;
+    margin: 0 auto;
+    background: white;
+    padding: 60px 70px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+  .print-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #FF6B00;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(255,107,0,0.3);
+    z-index: 1000;
+  }
+  .print-btn:hover { background: #e05e00; }
+  
+  .portada {
+    text-align: center;
+    padding: 60px 20px 40px;
+    border-bottom: 3px solid #FF6B00;
+    margin-bottom: 40px;
+    page-break-after: always;
+  }
+  .portada .icono {
+    font-size: 60px;
+    margin-bottom: 20px;
+  }
+  .portada h1 {
+    font-size: 28px;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+    font-weight: 900;
+  }
+  .portada .subtitulo {
+    font-size: 20px;
+    color: #FF6B00;
+    margin-bottom: 30px;
+    font-weight: 600;
+  }
+  .portada .info-proyecto {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.8;
+  }
+  .portada .info-proyecto strong { color: #1a1a1a; }
+  .portada .lema {
+    margin-top: 30px;
+    font-style: italic;
+    color: #FF6B00;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .toc {
+    background: #fafafa;
+    padding: 25px 30px;
+    border-left: 4px solid #FF6B00;
+    margin-bottom: 40px;
+    page-break-after: always;
+  }
+  .toc h2 {
+    font-size: 18px;
+    color: #FF6B00;
+    margin-bottom: 15px;
+  }
+  .toc ol {
+    margin-left: 20px;
+  }
+  .toc li {
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .toc a {
+    color: #1a1a1a;
+    text-decoration: none;
+  }
+  .toc a:hover { color: #FF6B00; }
+
+  h2 {
+    font-size: 22px;
+    color: #FF6B00;
+    margin: 35px 0 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #FF6B00;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 17px;
+    color: #1a1a1a;
+    margin: 20px 0 10px;
+    font-weight: 700;
+    page-break-after: avoid;
+  }
+  p {
+    margin-bottom: 12px;
+    text-align: justify;
+    font-size: 14px;
+  }
+  ul, ol {
+    margin: 10px 0 12px 30px;
+    font-size: 14px;
+  }
+  li { margin-bottom: 6px; }
+  strong { color: #1a1a1a; }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 13px;
+    page-break-inside: avoid;
+  }
+  th {
+    background: #FF6B00;
+    color: white;
+    padding: 10px;
+    text-align: left;
+    font-weight: bold;
+  }
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #ddd;
+  }
+  tr:nth-child(even) { background: #fafafa; }
+
+  code {
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #c0392b;
+  }
+  pre {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 12px;
+    margin: 12px 0;
+    border-left: 4px solid #FF6B00;
+    page-break-inside: avoid;
+  }
+  pre code {
+    background: none;
+    color: #f8f8f2;
+    padding: 0;
+  }
+
+  .destacado {
+    background: #FFF3E8;
+    border-left: 4px solid #FF6B00;
+    padding: 15px 20px;
+    margin: 15px 0;
+    font-size: 14px;
+    page-break-inside: avoid;
+  }
+  .regla-oro {
+    background: #e8f5e9;
+    border-left: 4px solid #4CAF50;
+    padding: 12px 18px;
+    margin: 15px 0;
+    font-size: 14px;
+    font-style: italic;
+    page-break-inside: avoid;
+  }
+  .regla-oro::before {
+    content: "💡 Regla de oro: ";
+    font-weight: bold;
+    font-style: normal;
+  }
+
+  .glosario dt {
+    font-weight: bold;
+    color: #FF6B00;
+    margin-top: 12px;
+    font-size: 14px;
+  }
+  .glosario dd {
+    margin-left: 20px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #444;
+  }
+
+  .team-card {
+    background: #fafafa;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid #FF6B00;
+    page-break-inside: avoid;
+  }
+  .team-card strong { color: #FF6B00; }
+  .team-card a { color: #FF6B00; text-decoration: none; }
+
+  .footer-doc {
+    margin-top: 50px;
+    padding-top: 15px;
+    border-top: 2px solid #ddd;
+    text-align: center;
+    font-size: 11px;
+    color: #888;
+  }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .document { box-shadow: none; padding: 40px 50px; max-width: 100%; }
+    .print-btn { display: none; }
+    h2, h3 { page-break-after: avoid; }
+    table, pre, .destacado, .regla-oro, .team-card { page-break-inside: avoid; }
+    .portada { page-break-after: always; }
+    .toc { page-break-after: always; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">⬇ Descargar PDF</button>
+
+<div class="document">
+
+  <!-- PORTADA -->
+  <div class="portada">
+    <div class="icono">📘</div>
+    <h1>DOCUMENTACIÓN TÉCNICA Y DE APRENDIZAJE</h1>
+    <div class="subtitulo">TRAVEL CC — Módulo Frontend</div>
+    <div class="info-proyecto">
+      <strong>Proyecto:</strong> INGT1003 — Arquitectura de Desarrollo (2026-2)<br>
+      <strong>Plataforma:</strong> Flutter (Android, Web)<br>
+      <strong>Arquitectura:</strong> MVVM + Clean Architecture<br><br>
+      <strong>Equipo:</strong><br>
+      Leandro Manríquez · Ignacia Quiroz · Benjamín Soto · Pablo Sotelo
+    </div>
+    <div class="lema">"La ruta que aprende"</div>
+  </div>
+
+  <!-- TABLA DE CONTENIDOS -->
+  <div class="toc">
+    <h2>📋 Tabla de Contenidos</h2>
+    <ol>
+      <li><a href="#intro">Introducción al Proyecto</a></li>
+      <li><a href="#equipo">Equipo de Trabajo</a></li>
+      <li><a href="#flutter">¿Qué es Flutter y por qué lo usamos?</a></li>
+      <li><a href="#dart">Conceptos Fundamentales de Dart</a></li>
+      <li><a href="#arquitectura">Arquitectura del Proyecto (MVVM + Clean Architecture)</a></li>
+      <li><a href="#estructura">Estructura de Carpetas Explicada</a></li>
+      <li><a href="#widget">Anatomía de un Widget en Flutter</a></li>
+      <li><a href="#archivos">Análisis Archivo por Archivo</a></li>
+      <li><a href="#navegacion">Sistema de Navegación con GoRouter</a></li>
+      <li><a href="#mapa">Integración del Mapa con flutter_map</a></li>
+      <li><a href="#diseno">Principios de Diseño Aplicados (DRY y SOLID)</a></li>
+      <li><a href="#glosario">Glosario de Términos Técnicos</a></li>
+    </ol>
+  </div>
+
+  <!-- 1. INTRODUCCIÓN -->
+  <h2 id="intro">1. Introducción al Proyecto</h2>
+  <p>TRAVEL CC es una aplicación móvil diseñada para el transporte pesado de carga. Resuelve un problema crítico: los mapas convencionales (como Google Maps o Waze) están diseñados para vehículos livianos e ignoran restricciones físicas (altura, peso, ancho) y normativas (permisos de vialidad desde 4,2 m).</p>
+  
+  <p>Nuestra propuesta de valor se basa en 3 pilares:</p>
+  <ol>
+    <li><strong>Navegación Heavy:</strong> Rutas calculadas según las dimensiones reales del vehículo.</li>
+    <li><strong>Fleet Tracking:</strong> Monitoreo en tiempo real para jefes de flota.</li>
+    <li><strong>Mapa que Aprende (Crowdsourcing):</strong> Los conductores reportan desvíos y anomalías, mejorando la base de datos geoespacial colectivamente (validado con datos de CONASET: 2.934 colisiones con camiones en 2024).</li>
+  </ol>
+
+  <p>Este documento presenta el desarrollo del <strong>módulo Frontend</strong> de la aplicación, construido con Flutter y siguiendo el patrón MVVM. Se detallan las decisiones técnicas, la arquitectura implementada y los conceptos aprendidos durante el desarrollo.</p>
+
+  <!-- 2. EQUIPO -->
+  <h2 id="equipo">2. Equipo de Trabajo</h2>
+  
+  <div class="team-card">
+    <strong>Leandro Manríquez</strong> — Coordinación<br>
+    GitHub: <a href="https://github.com/LeandroManriquez">@LeandroManriquez</a>
+  </div>
+  <div class="team-card">
+    <strong>Ignacia Quiroz</strong> — Documentación & Desarrollo Frontend<br>
+    GitHub: <a href="https://github.com/igna-Quiroz">@igna-Quiroz</a>
+  </div>
+  <div class="team-card">
+    <strong>Benjamín Soto</strong> — Documentación & Soporte<br>
+    GitHub: <a href="https://github.com/brocklets">@brocklets</a>
+  </div>
+  <div class="team-card">
+    <strong>Pablo Sotelo</strong> — Documentación<br>
+    GitHub: <a href="https://github.com/pablosotelo-source">@pablosotelo-source</a>
+  </div>
+
+  <!-- 3. FLUTTER -->
+  <h2 id="flutter">3. ¿Qué es Flutter y por qué lo usamos?</h2>
+  <p>Flutter es un framework de UI de código abierto creado por Google. Permite compilar aplicaciones nativas para móviles (Android), web y escritorio desde una única base de código escrita en el lenguaje Dart.</p>
+
+  <h3>¿Por qué lo elegimos para TRAVEL CC?</h3>
+  <ul>
+    <li><strong>Multiplataforma real:</strong> Un solo desarrollo para conductores que usan Android y jefes de flota que usan Web.</li>
+    <li><strong>Rendimiento nativo:</strong> Compila a código máquina, logrando 60 FPS, crucial para una app de navegación en movimiento.</li>
+    <li><strong>UI consistente:</strong> Permite replicar exactamente el diseño oscuro y de alto contraste definido en nuestro proyecto.</li>
+    <li><strong>Hot Reload:</strong> Acelera el desarrollo al ver cambios en tiempo real sin reiniciar la app.</li>
+  </ul>
+
+  <!-- 4. DART -->
+  <h2 id="dart">4. Conceptos Fundamentales de Dart</h2>
+  <p>Dart es el lenguaje detrás de Flutter. Conceptos clave que aplicamos en TRAVEL CC:</p>
+
+  <h3>4.1. Tipado estático con inferencia</h3>
+  <p>El tipo se declara o se infiere, evitando errores en tiempo de ejecución:</p>
+  <pre><code>final String truckId = 'TRK-023';  // Tipo explícito
+final speed = 85.5;                // Tipo inferido (double)</code></pre>
+
+  <h3>4.2. Null Safety</h3>
+  <p>Dart obliga a manejar valores nulos explícitamente, evitando el temido "NullPointerException":</p>
+  <pre><code>String? driverName;  // Puede ser null
+String name = driverName ?? 'Desconocido';  // Valor por defecto</code></pre>
+
+  <h3>4.3. Asincronía (Future/async/await)</h3>
+  <p>Fundamental para simular llamadas a red (como el login):</p>
+  <pre><code>Future&lt;void&gt; onLogin() async {
+  _isLoading = true;
+  notifyListeners();
+  await Future.delayed(const Duration(milliseconds: 1500));
+  _isLoading = false;
+  notifyListeners();
+}</code></pre>
+
+  <h3>4.4. Clases y ChangeNotifier</h3>
+  <p>Usamos clases que extienden <code>ChangeNotifier</code> para los ViewModels, que gestionan el estado de la pantalla y notifican a la View cuando algo cambia.</p>
+
+  <!-- 5. ARQUITECTURA -->
+  <h2 id="arquitectura">5. Arquitectura del Proyecto (MVVM + Clean Architecture)</h2>
+  <p>Aplicamos una combinación de Clean Architecture y el patrón MVVM (Model-View-ViewModel) para garantizar que el código sea escalable, testeable y mantenible.</p>
+
+  <h3>El Patrón MVVM en TRAVEL CC:</h3>
+  <ul>
+    <li><strong>Model:</strong> Estructura de los datos puros (ej. datos simulados de camiones activos).</li>
+    <li><strong>View:</strong> La interfaz de usuario (UI). Lo que se ve. Solo contiene Widgets.</li>
+    <li><strong>ViewModel:</strong> El "cerebro". Conecta Model y View. Maneja el estado y la lógica.</li>
+  </ul>
+
+  <div class="regla-oro">
+    La View nunca debe contener lógica de negocio compleja. Solo "escucha" al ViewModel y se reconstruye cuando este avisa que algo cambió.
+  </div>
+
+  <h3>Flujo de datos:</h3>
+  <pre><code>┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│    View     │────▶│  ViewModel   │────▶│    View     │
+│  (Widget)   │     │(ChangeNotifier)│   │  (Rebuild)  │
+└─────────────┘     └──────────────┘     └─────────────┘
+       ▲                    │
+       │                    ▼
+       └───────────── notifyListeners()</code></pre>
+
+  <!-- 6. ESTRUCTURA -->
+  <h2 id="estructura">6. Estructura de Carpetas Explicada</h2>
+  <p>Organizamos el código por funcionalidades (<strong>features</strong>), no por tipo de archivo. Esto facilita encontrar todo lo relacionado con una pantalla específica.</p>
+
+  <pre><code>lib/
+├── main.dart                      # Punto de entrada
+├── core/                          # Código compartido
+│   └── theme/
+│       ├── app_colors.dart        # Paleta semántica
+│       ├── app_spacing.dart       # Tokens de espaciado
+│       ├── app_typography.dart    # Tokens tipográficos
+│       └── app_theme.dart         # ThemeData global
+├── features/                      # Módulos funcionales
+│   ├── auth/                      # Login con selector de rol
+│   ├── dashboard/                 # Panel principal
+│   ├── map/                       # Mapa en vivo (OpenStreetMap)
+│   ├── fleet/                     # Gestión de flota
+│   ├── vehicle/                   # Configuración del camión
+│   ├── truck_detail/              # Detalle de camión
+│   ├── report/                    # Reporte de incidencias
+│   ├── settings/                  # Configuración general
+│   ├── route_alert/               # Alerta de ruta bloqueada
+│   ├── route_calculation/         # Cálculo de ruta apta
+│   ├── active_route/              # Navegación activa
+│   ├── company_menu/              # Menú Empresa
+│   ├── driver_menu/               # Menú Conductor
+│   ├── no_route/                  # Ninguna ruta compatible
+│   ├── profile/                   # Perfil del conductor
+│   └── states/                    # Estados especiales
+├── routes/
+│   └── app_router.dart            # Configuración de rutas
+└── injection/                     # Inyección de dependencias</code></pre>
+
+  <h3>Estructura interna de cada feature:</h3>
+  <pre><code>features/
+└── nombre_feature/
+    └── presentation/
+        ├── viewmodels/
+        │   └── nombre_viewmodel.dart    # Lógica de estado
+        └── views/
+            └── nombre_view.dart         # Interfaz de usuario</code></pre>
+
+  <!-- 7. WIDGET -->
+  <h2 id="widget">7. Anatomía de un Widget en Flutter</h2>
+  <p>En Flutter, todo es un Widget. Son como piezas de LEGO que se combinan para formar la UI.</p>
+
+  <h3>7.1. Tipos de Widgets</h3>
+  <ul>
+    <li><strong>StatelessWidget:</strong> No cambia con el tiempo (ej. un texto estático, un ícono).</li>
+    <li><strong>StatefulWidget:</strong> Puede cambiar. En MVVM, delegamos este estado al ViewModel para mantener la View lo más simple posible.</li>
+  </ul>
+
+  <h3>7.2. Widgets de Layout más usados en TRAVEL CC</h3>
+  <table>
+    <tr><th>Widget</th><th>Uso en el proyecto</th></tr>
+    <tr><td><code>Scaffold</code></td><td>Estructura base de cada pantalla (appBar, body, floatingActionButton)</td></tr>
+    <tr><td><code>Column / Row</code></td><td>Organizan elementos vertical u horizontalmente</td></tr>
+    <tr><td><code>Stack</code></td><td>Apila elementos uno sobre otro (usado en el mapa para superponer UI)</td></tr>
+    <tr><td><code>Container</code></td><td>Cajas para dar espacio, color o bordes</td></tr>
+    <tr><td><code>Expanded</code></td><td>Ocupa el espacio disponible en un Row/Column</td></tr>
+    <tr><td><code>SingleChildScrollView</code></td><td>Permite scroll cuando el contenido excede la pantalla</td></tr>
+  </table>
+
+  <!-- 8. ARCHIVOS -->
+  <h2 id="archivos">8. Análisis Archivo por Archivo</h2>
+
+  <h3>8.1. main.dart — El director</h3>
+  <p>Es el punto de entrada de la app. Inicializa la aplicación, aplica el tema oscuro y conecta el sistema de navegación:</p>
+  <pre><code>void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      title: 'TRAVEL CC',
+      theme: AppTheme.darkTheme,
+      routerConfig: appRouter,
+    );
+  }
+}</code></pre>
+
+  <h3>8.2. app_colors.dart — La paleta centralizada</h3>
+  <p>Centraliza todos los colores. Si el cliente pide cambiar el naranja por azul, solo modificamos esta línea y toda la app se actualiza:</p>
+  <pre><code>class AppColors {
+  static const Color actionOrange = Color(0xFFFF6B00);
+  static const Color warningYellow = Color(0xFFFFB800);
+  static const Color criticalRed = Color(0xFFE53935);
+  static const Color backgroundDark = Color(0xFF121212);
+  // ... más colores
+}</code></pre>
+
+  <h3>8.3. auth_viewmodel.dart — La lógica del login</h3>
+  <p>Contiene la lógica del login. Usa controladores para leer los inputs y simula una carga asíncrona:</p>
+  <pre><code>class AuthViewModel extends ChangeNotifier {
+  final TextEditingController idController = TextEditingController();
+  String _selectedRole = 'usuario';
+  
+  void selectRole(String role) {
+    _selectedRole = role;
+    notifyListeners();  // Avisa a la View que cambió el rol
+  }
+}</code></pre>
+
+  <h3>8.4. fleet_view.dart — La lista de camiones</h3>
+  <p>Muestra las estadísticas de la flota. Utiliza un <code>Consumer</code> para reconstruir solo la parte de la UI que depende de los datos:</p>
+  <pre><code>body: Consumer&lt;FleetViewModel&gt;(
+  builder: (context, viewModel, child) {
+    return ListView.builder(
+      itemCount: viewModel.trucks.length,
+      itemBuilder: (context, index) {
+        final truck = viewModel.trucks[index];
+        return _buildTruckCard(context, truck);
+      },
+    );
+  },
+)</code></pre>
+
+  <h3>8.5. map_view.dart — El mapa interactivo</h3>
+  <p>Integra OpenStreetMap usando <code>flutter_map</code> y superpone la UI con un <code>Stack</code>:</p>
+  <pre><code>body: Stack(
+  children: [
+    Positioned.fill(
+      child: FlutterMap(
+        options: MapOptions(
+          initialCenter: LatLng(-33.4489, -70.6693),
+          initialZoom: 13.0,
+        ),
+        children: [
+          TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+          MarkerLayer(markers: [/* camión */]),
+        ],
+      ),
+    ),
+    // UI superpuesta: buscador, botones, etc.
+  ],
+)</code></pre>
+
+  <!-- 9. NAVEGACIÓN -->
+  <h2 id="navegacion">9. Sistema de Navegación con GoRouter</h2>
+  <p>Usamos el paquete <code>go_router</code> para una navegación declarativa y segura. Permite deep linking y manejo de rutas con parámetros.</p>
+
+  <h3>Configuración principal:</h3>
+  <pre><code>final GoRouter appRouter = GoRouter(
+  initialLocation: '/login',
+  routes: [
+    GoRoute(path: '/login', name: 'login', builder: ...),
+    GoRoute(path: '/map', name: 'map', builder: ...),
+    GoRoute(path: '/fleet', name: 'fleet', builder: ...),
+    // ... 16 rutas más
+  ],
+);</code></pre>
+
+  <h3>Diferencia clave aprendida:</h3>
+  <ul>
+    <li><code>context.goNamed('login')</code>: <strong>Reemplaza</strong> la pantalla actual. Ideal para flujos lineales (Inicio → Login) donde no queremos que el botón "Atrás" regrese al inicio.</li>
+    <li><code>context.pushNamed('detalle')</code>: <strong>Apila</strong> la pantalla. Permite volver atrás con <code>context.pop()</code>.</li>
+  </ul>
+
+  <!-- 10. MAPA -->
+  <h2 id="mapa">10. Integración del Mapa con flutter_map</h2>
+  <p>Para el mapa utilizamos <code>flutter_map</code> (basado en OpenStreetMap) en lugar de Google Maps, porque:</p>
+  <ul>
+    <li><strong>No requiere API Key</strong> de pago.</li>
+    <li><strong>Es open source</strong> y gratuito para uso comercial.</li>
+    <li><strong>Permite personalización total</strong> de marcadores y capas.</li>
+  </ul>
+
+  <h3>Dependencias agregadas en pubspec.yaml:</h3>
+  <pre><code>dependencies:
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.0  # Para manejar coordenadas LatLng</code></pre>
+
+  <h3>Lección aprendida:</h3>
+  <div class="destacado">
+    Al integrar el mapa en web/tablet, el contenedor debe envolverse en <code>Positioned.fill</code> para obligarlo a ocupar todo el fondo. Sin esto, el mapa puede renderizarse con tamaño 0x0 en algunos navegadores.
+  </div>
+
+  <!-- 11. DISEÑO -->
+  <h2 id="diseno">11. Principios de Diseño Aplicados</h2>
+
+  <h3>11.1. DRY (Don't Repeat Yourself)</h3>
+  <p>No escribimos colores o espaciados al azar. Usamos variables centralizadas en <code>app_colors.dart</code> y <code>app_spacing.dart</code>. Ejemplo:</p>
+  <pre><code>// ❌ MAL: colores repetidos
+Container(color: Color(0xFFFF6B00))
+Container(color: Color(0xFFFF6B00))
+
+// ✅ BIEN: variable centralizada
+Container(color: AppColors.actionOrange)
+Container(color: AppColors.actionOrange)</code></pre>
+
+  <h3>11.2. Single Responsibility (SOLID)</h3>
+  <p>Cada clase tiene una única responsabilidad:</p>
+  <ul>
+    <li><code>FleetView</code> solo <strong>dibuja</strong> la UI.</li>
+    <li><code>FleetViewModel</code> solo <strong>piensa</strong> (maneja datos y lógica).</li>
+  </ul>
+  <p>Si hay un bug visual, sabemos que está en la View. Si hay un bug de datos, está en el ViewModel.</p>
+
+  <h3>11.3. Separation of Concerns</h3>
+  <p>La lógica de negocio está aislada de la UI. Esto permite:</p>
+  <ul>
+    <li>Probar la lógica sin necesidad de renderizar la UI.</li>
+    <li>Cambiar el diseño sin tocar la lógica.</li>
+    <li>Reutilizar ViewModels en diferentes Views.</li>
+  </ul>
+
+  <!-- 12. GLOSARIO -->
+  <h2 id="glosario">12. Glosario de Términos Técnicos</h2>
+  <dl class="glosario">
+    <dt>Widget</dt>
+    <dd>Unidad básica de construcción de UI en Flutter. Todo en Flutter es un Widget.</dd>
+
+    <dt>ChangeNotifier</dt>
+    <dd>Clase de Flutter que avisa a la View cuando sus datos internos cambian, mediante <code>notifyListeners()</code>.</dd>
+
+    <dt>Consumer</dt>
+    <dd>Widget que "escucha" a un ChangeNotifier y reconstruye su hijo cuando hay cambios.</dd>
+
+    <dt>StatelessWidget / StatefulWidget</dt>
+    <dd>Widgets que no cambian / Widgets que pueden cambiar de estado.</dd>
+
+    <dt>GoRouter</dt>
+    <dd>Paquete de Flutter para navegación declarativa, con soporte para deep linking.</dd>
+
+    <dt>Provider</dt>
+    <dd>Paquete de gestión de estado que facilita el uso de ChangeNotifier en la UI.</dd>
+
+    <dt>Hot Reload (r en terminal)</dt>
+    <dd>Recarga rápida que aplica cambios de UI sin perder el estado de la app.</dd>
+
+    <dt>Hot Restart (R en terminal)</dt>
+    <dd>Reinicia la app desde cero aplicando todos los cambios de código.</dd>
+
+    <dt>Mock Data</dt>
+    <dd>Datos simulados usados en el desarrollo hasta que el Backend esté listo.</dd>
+
+    <dt>Crowdsourcing</dt>
+    <dd>Obtención de información de manera distribuida entre los usuarios (conductores).</dd>
+
+    <dt>MVVM</dt>
+    <dd>Model-View-ViewModel. Patrón arquitectónico que separa la UI de la lógica de negocio.</dd>
+
+    <dt>flutter_map</dt>
+    <dd>Paquete de Flutter para renderizar mapas de OpenStreetMap sin API Key.</dd>
+  </dl>
+
+  <!-- FOOTER -->
+  <div class="footer-doc">
+    <strong>TRAVEL CC</strong> — Documentación Técnica y de Aprendizaje<br>
+    Arquitectura de Desarrollo (Móvil y Web) · INGT1003 · Semestre 2026-2<br>
+    Leandro Manríquez · Ignacia Quiroz · Benjamín Soto · Pablo Sotelo
+  </div>
+
+</div>
+
+</body>
+</html>
