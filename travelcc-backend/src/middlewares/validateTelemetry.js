@@ -23,7 +23,7 @@ const validateTelemetry = (req, res, next) => {
     next();
   } catch (error) {
     // Si Zod falla, extraemos los mensajes de error de forma limpia
-    const errorMessages = error.errors.map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
+    const errorMessages = (error.issues || []).map(err => `${err.path.join('.')}: ${err.message}`).join(', ');
     return next(new AppError(`Error de validación en telemetría: ${errorMessages}`, 400, 'ERR_VALIDATION_FAILED'));
   }
 };

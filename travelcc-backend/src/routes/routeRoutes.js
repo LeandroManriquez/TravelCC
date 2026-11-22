@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const protect = require('../middlewares/authMiddleware');
+const requireRole = require('../middlewares/requireRole');
+const { canAccessTruck } = require('../utils/truckAccess');
 const supabase = require('../config/supabase');
 const AppError = require('../utils/appError');
 const logger = require('../utils/logger');
@@ -103,7 +105,7 @@ async function evaluateRestrictionsForGeometry(geometryGeoJson, truckHeight, tru
 }
 
 // POST /api/v1/routes/plan
-router.post('/plan', protect, async (req, res, next) => {
+router.post('/plan', protect, requireRole('driver'), async (req, res, next) => {
   try {
     const { truck_id, origin, destination } = req.body || {};
     //console.log('BODY RECIBIDO:', JSON.stringify(req.body));
@@ -126,18 +128,7 @@ router.post('/plan', protect, async (req, res, next) => {
       );
     }
 
-    // 1. Perfil del usuario para validar flota
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, fleet_id')
-      .eq('id', req.user.id)
-      .single();
-
-    if (profileError) {
-      return next(new AppError('No se pudo verificar el perfil del usuario', 500, 'ERR_PROFILE_LOOKUP'));
-    }
-
-    // 2. Buscar camión y verificar permiso (anti-IDOR)
+    // 1. Buscar camión y verificar permiso según rol (anti-IDOR)
     const { data: truck, error: truckError } = await supabase
       .from('trucks')
       .select('id, plate, driver_id, fleet_id, height_meters, weight_tons')
@@ -148,9 +139,7 @@ router.post('/plan', protect, async (req, res, next) => {
       return next(new AppError('Camión no encontrado', 404, 'ERR_TRUCK_NOT_FOUND'));
     }
 
-    const hasAccess =
-      truck.driver_id === req.user.id ||
-      (profile?.fleet_id && truck.fleet_id === profile.fleet_id);
+    const hasAccess = canAccessTruck(req.profile, truck);
 
     if (!hasAccess) {
       return next(

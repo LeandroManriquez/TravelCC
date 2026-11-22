@@ -2,75 +2,16 @@ const express = require('express');
 const router = express.Router();
 const protect = require('../middlewares/authMiddleware');
 const validateTelemetry = require('../middlewares/validateTelemetry');
+const requireRole = require('../middlewares/requireRole');
+const requireActiveFleetPlan = require('../middlewares/requireActiveFleetPlan');
+const { getAuthorizedTrucks } = require('../utils/truckAccess');
+const { extractLatLng } = require('../utils/geo');
 const supabase = require('../config/supabase');
 const AppError = require('../utils/appError');
 const logger = require('../utils/logger');
 
-// Valida perfil y pertenencia del camión (anti-IDOR)
-async function getAuthorizedTrucks(userId, truckIds) {
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, fleet_id')
-    .eq('id', userId)
-    .single();
-
-  if (profileError) {
-    throw new AppError('No se pudo verificar el perfil del usuario', 500, 'ERR_PROFILE_LOOKUP');
-  }
-
-  const { data: trucks, error: trucksError } = await supabase
-    .from('trucks')
-    .select('id, plate, driver_id, fleet_id')
-    .in('id', truckIds);
-
-  if (trucksError) {
-    throw new AppError('Error al validar camiones asignados', 500, 'ERR_TRUCK_LOOKUP');
-  }
-
-  const allowedTrucks = (trucks || []).filter(
-    (t) =>
-      t.driver_id === userId ||
-      (profile?.fleet_id && t.fleet_id === profile.fleet_id)
-  );
-
-  return {
-    profile,
-    trucks: trucks || [],
-    allowedTrucks,
-    allowedIds: new Set(allowedTrucks.map((t) => t.id))
-  };
-}
-
-// Normaliza location (GeoJSON Point o WKT POINT(lng lat)) a { lat, lng }
-function extractLatLng(location) {
-  if (!location) return null;
-
-  if (
-    typeof location === 'object' &&
-    Array.isArray(location.coordinates) &&
-    location.coordinates.length >= 2
-  ) {
-    return {
-      lng: Number(location.coordinates[0]),
-      lat: Number(location.coordinates[1])
-    };
-  }
-
-  if (typeof location === 'string') {
-    const match = location.match(/POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/i);
-    if (match) {
-      return {
-        lng: Number(match[1]),
-        lat: Number(match[2])
-      };
-    }
-  }
-
-  return null;
-}
-
 // POST /api/v1/telemetry -> Recibe los puntos GPS de los camiones
-router.post('/', protect, validateTelemetry, async (req, res, next) => {
+router.post('/', protect, requireRole('driver'), validateTelemetry, async (req, res, next) => {
   try {
     const rawData = req.body;
     const points = Array.isArray(rawData) ? rawData : [rawData];
@@ -85,7 +26,7 @@ router.post('/', protect, validateTelemetry, async (req, res, next) => {
       );
     }
 
-    const { allowedIds } = await getAuthorizedTrucks(req.user.id, truckIds);
+    const { allowedIds } = await getAuthorizedTrucks(req.profile, truckIds);
 
     const unauthorizedTruck = truckIds.find((id) => !allowedIds.has(id));
     if (unauthorizedTruck) {
@@ -139,7 +80,7 @@ router.post('/', protect, validateTelemetry, async (req, res, next) => {
 });
 
 // GET /api/v1/telemetry/:truckId/latest -> Última posición conocida del camión/conductor
-router.get('/:truckId/latest', protect, async (req, res, next) => {
+router.get('/:truckId/latest', protect, requireRole('admin', 'driver'), requireActiveFleetPlan, async (req, res, next) => {
   try {
     const { truckId } = req.params;
 
@@ -147,7 +88,7 @@ router.get('/:truckId/latest', protect, async (req, res, next) => {
       return next(new AppError('Debes indicar un truckId válido', 400, 'ERR_MISSING_TRUCK_ID'));
     }
 
-    const { trucks, allowedIds } = await getAuthorizedTrucks(req.user.id, [truckId]);
+    const { trucks, allowedIds } = await getAuthorizedTrucks(req.profile, [truckId]);
     const truck = trucks.find((t) => t.id === truckId);
 
     if (!truck) {

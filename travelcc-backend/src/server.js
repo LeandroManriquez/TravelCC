@@ -4,6 +4,9 @@ const helmet = require('helmet');
 const telemetryRoutes = require('./routes/telemetryRoutes');
 const rateLimit = require('express-rate-limit');
 const routeRoutes = require('./routes/routeRoutes');
+const meRoutes = require('./routes/meRoutes');
+const fleetRoutes = require('./routes/fleetRoutes');
+const billingRoutes = require('./routes/billingRoutes');
 require('dotenv').config();
 
 const logger = require('./utils/logger');
@@ -51,6 +54,9 @@ app.get('/health', (req, res) => {
 });
 
 // 6. Rutas principales y manejador para rutas no encontradas (404)
+app.use('/api/v1/me', meRoutes);
+app.use('/api/v1/fleet', fleetRoutes);
+app.use('/api/v1/billing', billingRoutes);
 app.use('/api/v1/routes', routeRoutes);
 app.use('/api/v1/telemetry', telemetryRoutes);
 app.all(/(.*)/, (req, res, next) => {
