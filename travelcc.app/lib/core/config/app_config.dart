@@ -9,5 +9,5 @@ class AppConfig {
   // Dirección de tu backend (incluye /api/v1, sin barra final).
   //  - Celular por Wi-Fi:  http://IP_DE_TU_PC:3000/api/v1   (ej. http://192.168.1.20:3000/api/v1)
   //  - Celular por USB con "adb reverse tcp:3000 tcp:3000":  http://localhost:3000/api/v1
-  static const apiBaseUrl = 'http://192.168.100.34:3000/api/v1';
+  static const apiBaseUrl = 'https://travelcc.onrender.com';
 }
