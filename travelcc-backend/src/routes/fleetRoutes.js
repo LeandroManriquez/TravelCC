@@ -14,9 +14,11 @@ const { extractLatLng } = require('../utils/geo');
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const linkSchema = z.strictObject({
-  code: z.string().trim().min(6, 'Código inválido').max(20, 'Código inválido')
-});
+const linkSchema = z
+  .object({
+    code: z.string().trim().min(6, 'Código inválido').max(20, 'Código inválido')
+  })
+  .strict();
 
 // Frena los intentos de adivinar códigos: por jefe de flota, no por IP.
 const linkLimiter = rateLimit({
@@ -24,7 +26,8 @@ const linkLimiter = rateLimit({
   limit: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.user.id,
+  keyGenerator: (req) => req.user?.id || req.profile?.id || req.ip,
+  validate: { keyGeneratorIpFallback: false },
   message: {
     status: 'fail',
     error_code: 'ERR_SYS_RATE_LIMIT',
@@ -45,24 +48,38 @@ router.post(
   validateBody(linkSchema),
   async (req, res, next) => {
     try {
-      const fleetId = req.profile.fleet_id;
+      const fleetId = req.profile?.fleet_id;
+      if (!fleetId) {
+        return next(new AppError('Tu cuenta no tiene una flota asociada', 409, 'ERR_NO_FLEET'));
+      }
+
       const code = normalizeLinkCode(req.body.code);
+      const nowIso = new Date().toISOString();
 
       // Reclama el código de forma atómica: si dos jefes lo usan a la vez, solo uno lo consigue.
       const { data: claimed, error: claimError } = await supabase
         .from('driver_link_codes')
-        .update({ used_at: new Date().toISOString() })
+        .update({ used_at: nowIso })
         .eq('code', code)
         .is('used_at', null)
-        .gt('expires_at', new Date().toISOString())
-        .select('driver_id')
+        .gt('expires_at', nowIso)
+        .select('id, driver_id')
         .maybeSingle();
 
       if (claimError) {
+        logger.error('Error al reclamar código de enlace:', claimError);
         return next(new AppError('No se pudo validar el código', 500, 'ERR_LINK_CODE_LOOKUP'));
       }
 
       if (!claimed) return next(invalidCodeError());
+
+      // Helper para liberar el código si la validación posterior falla y no quemarlo innecesariamente.
+      const releaseCode = async () => {
+        await supabase
+          .from('driver_link_codes')
+          .update({ used_at: null })
+          .eq('id', claimed.id);
+      };
 
       const { data: driver, error: driverError } = await supabase
         .from('profiles')
@@ -71,13 +88,19 @@ router.post(
         .maybeSingle();
 
       if (driverError) {
+        await releaseCode();
+        logger.error('Error al consultar perfil del conductor:', driverError);
         return next(new AppError('No se pudo consultar al conductor', 500, 'ERR_PROFILE_LOOKUP'));
       }
 
-      if (!driver || driver.role !== 'driver') return next(invalidCodeError());
+      if (!driver || driver.role !== 'driver') {
+        await releaseCode();
+        return next(invalidCodeError());
+      }
 
       // Un conductor que ya está en otra flota tiene que salir primero.
       if (driver.fleet_id && driver.fleet_id !== fleetId) {
+        await releaseCode();
         return next(
           new AppError(
             'Ese conductor ya pertenece a otra flota. Debe salir de ella antes de enlazarse',
@@ -92,12 +115,26 @@ router.post(
         .update({ fleet_id: fleetId })
         .eq('driver_id', driver.id);
 
+      if (truckError) {
+        await releaseCode();
+        logger.error('Error al actualizar camiones del conductor:', truckError);
+        return next(new AppError('No se pudo enlazar al conductor', 500, 'ERR_LINK_DRIVER'));
+      }
+
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ fleet_id: fleetId })
         .eq('id', driver.id);
 
-      if (truckError || profileError) {
+      if (profileError) {
+        // Revertir asignación en trucks para evitar estado inconsistente
+        await supabase
+          .from('trucks')
+          .update({ fleet_id: null })
+          .eq('driver_id', driver.id)
+          .eq('fleet_id', fleetId);
+        await releaseCode();
+        logger.error('Error al actualizar flota en perfil del conductor:', profileError);
         return next(new AppError('No se pudo enlazar al conductor', 500, 'ERR_LINK_DRIVER'));
       }
 
@@ -118,7 +155,11 @@ router.post(
 // más un resumen para el dashboard. Se puede consultar cada pocos segundos.
 router.get('/trucks', protect, requireRole('admin'), requireActiveFleetPlan, async (req, res, next) => {
   try {
-    const fleetId = req.profile.fleet_id;
+    const fleetId = req.profile?.fleet_id;
+    if (!fleetId) {
+      return next(new AppError('Tu cuenta no tiene una flota asociada', 409, 'ERR_NO_FLEET'));
+    }
+
     const activeWindowMs = Number(process.env.ACTIVE_WINDOW_MINUTES || 5) * 60 * 1000;
 
     const { data: trucks, error: trucksError } = await supabase
@@ -127,6 +168,7 @@ router.get('/trucks', protect, requireRole('admin'), requireActiveFleetPlan, asy
       .eq('fleet_id', fleetId);
 
     if (trucksError) {
+      logger.error('Error al consultar camiones de la flota:', trucksError);
       return next(new AppError('Error al consultar los camiones de la flota', 500, 'ERR_TRUCK_LOOKUP'));
     }
 
@@ -141,22 +183,27 @@ router.get('/trucks', protect, requireRole('admin'), requireActiveFleetPlan, asy
         .in('id', driverIds);
 
       if (driversError) {
+        logger.error('Error al consultar conductores de la flota:', driversError);
         return next(new AppError('Error al consultar los conductores', 500, 'ERR_PROFILE_LOOKUP'));
       }
 
       (drivers || []).forEach((d) => driversById.set(d.id, d));
     }
 
-    // Última posición de cada camión (una consulta por camión: suficiente para una flota pequeña).
+    // Última posición de cada camión.
     const items = await Promise.all(
       fleetTrucks.map(async (truck) => {
-        const { data: point } = await supabase
+        const { data: point, error: pointError } = await supabase
           .from('gps_tracking')
           .select('location, speed_kmh, recorded_at')
           .eq('truck_id', truck.id)
           .order('recorded_at', { ascending: false })
           .limit(1)
           .maybeSingle();
+
+        if (pointError) {
+          logger.warn(`Error al consultar GPS del camión ${truck.id}:`, pointError);
+        }
 
         const coords = point ? extractLatLng(point.location) : null;
         const driver = driversById.get(truck.driver_id);
@@ -172,7 +219,7 @@ router.get('/trucks', protect, requireRole('admin'), requireActiveFleetPlan, asy
               ? {
                   lat: coords.lat,
                   lng: coords.lng,
-                  speed_kmh: point.speed_kmh,
+                  speed_kmh: point.speed_kmh != null ? Number(point.speed_kmh) : null,
                   recorded_at: point.recorded_at
                 }
               : null
@@ -181,11 +228,11 @@ router.get('/trucks', protect, requireRole('admin'), requireActiveFleetPlan, asy
     );
 
     const now = Date.now();
-    const activeTrucks = items.filter(
-      (item) =>
-        item.last_position &&
-        now - new Date(item.last_position.recorded_at).getTime() <= activeWindowMs
-    ).length;
+    const activeTrucks = items.filter((item) => {
+      if (!item.last_position?.recorded_at) return false;
+      const recordedMs = new Date(item.last_position.recorded_at).getTime();
+      return !Number.isNaN(recordedMs) && now - recordedMs <= activeWindowMs;
+    }).length;
 
     res.status(200).json({
       status: 'success',
@@ -204,7 +251,7 @@ router.get('/trucks', protect, requireRole('admin'), requireActiveFleetPlan, asy
 router.delete('/drivers/:driverId', protect, requireRole('admin'), async (req, res, next) => {
   try {
     const { driverId } = req.params;
-    const fleetId = req.profile.fleet_id;
+    const fleetId = req.profile?.fleet_id;
 
     if (!UUID_REGEX.test(driverId)) {
       return next(new AppError('El id del conductor no es válido', 400, 'ERR_VALIDATION_FAILED'));
@@ -222,6 +269,7 @@ router.delete('/drivers/:driverId', protect, requireRole('admin'), async (req, r
       .maybeSingle();
 
     if (lookupError) {
+      logger.error('Error al consultar conductor para desvincular:', lookupError);
       return next(new AppError('No se pudo consultar al conductor', 500, 'ERR_PROFILE_LOOKUP'));
     }
 
@@ -232,15 +280,20 @@ router.delete('/drivers/:driverId', protect, requireRole('admin'), async (req, r
     const { error: truckError } = await supabase
       .from('trucks')
       .update({ fleet_id: null })
-      .eq('driver_id', driverId)
-      .eq('fleet_id', fleetId);
+      .eq('driver_id', driverId);
+
+    if (truckError) {
+      logger.error('Error al desvincular camiones del conductor:', truckError);
+      return next(new AppError('No se pudo desvincular al conductor', 500, 'ERR_UNLINK_DRIVER'));
+    }
 
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ fleet_id: null })
       .eq('id', driverId);
 
-    if (truckError || profileError) {
+    if (profileError) {
+      logger.error('Error al desvincular perfil del conductor:', profileError);
       return next(new AppError('No se pudo desvincular al conductor', 500, 'ERR_UNLINK_DRIVER'));
     }
 

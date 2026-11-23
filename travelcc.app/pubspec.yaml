@@ -2,7 +2,7 @@ name: travel_cc
 description: "Aplicación de navegación y telemetría para transporte pesado."
 publish_to: 'none'
 version: 1.0.0+1
-
+url_launcher: ^6.3.1
 environment:
   sdk: ^3.13.5
 
@@ -24,6 +24,7 @@ dependencies:
   latlong2: ^0.9.0
   supabase_flutter: ^2.18.3
   http: ^1.6.0
+  geolocator: ^14.1.2
 
 dev_dependencies:
   flutter_test:

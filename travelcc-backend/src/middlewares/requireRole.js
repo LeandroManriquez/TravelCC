@@ -15,7 +15,7 @@ const requireRole = (...allowedRoles) => async (req, res, next) => {
   try {
     const { data: profile, error } = await supabase
       .from('profiles')
-      .select('id, full_name, role, fleet_id')
+      .select('id, full_name, phone, role, fleet_id')
       .eq('id', req.user.id)
       .maybeSingle();
 

@@ -40,7 +40,7 @@ class ReportView extends StatelessWidget {
                     CircularProgressIndicator(color: AppColors.primary),
                     SizedBox(height: 16),
                     Text(
-                      'Enviando reporte al sistema...',
+                      'Obteniendo GPS y enviando reporte...',
                       style: TextStyle(color: AppColors.textPrimary),
                     ),
                   ],
@@ -64,30 +64,34 @@ class ReportView extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xxl),
                   _buildReportButton(
                     context,
-                    'Accidente / Choque',
-                    Icons.car_crash,
-                    Colors.red,
+                    title: 'Accidente / Choque',
+                    typeCode: 'accident',
+                    icon: Icons.car_crash,
+                    color: Colors.red,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildReportButton(
                     context,
-                    'Obras en la vía',
-                    Icons.construction,
-                    Colors.orange,
+                    title: 'Obras en la vía',
+                    typeCode: 'roadworks',
+                    icon: Icons.construction,
+                    color: Colors.orange,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildReportButton(
                     context,
-                    'Puente o paso bajo',
-                    Icons.height,
-                    Colors.blue,
+                    title: 'Puente o paso bajo',
+                    typeCode: 'low_bridge',
+                    icon: Icons.height,
+                    color: Colors.blue,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   _buildReportButton(
                     context,
-                    'Tráfico intenso',
-                    Icons.traffic,
-                    Colors.yellow,
+                    title: 'Tráfico intenso',
+                    typeCode: 'heavy_traffic',
+                    icon: Icons.traffic,
+                    color: Colors.amber.shade700,
                   ),
                 ],
               ),
@@ -99,27 +103,39 @@ class ReportView extends StatelessWidget {
   }
 
   Widget _buildReportButton(
-    BuildContext context,
-    String title,
-    IconData icon,
-    Color color,
-  ) {
+    BuildContext context, {
+    required String title,
+    required String typeCode,
+    required IconData icon,
+    required Color color,
+  }) {
     return SizedBox(
       width: double.infinity,
       height: 70,
       child: ElevatedButton.icon(
-        onPressed: () {
-          context.read<ReportViewModel>().reportIncident(title);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('¡Gracias! Reporte de "$title" enviado.'),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-          Future.delayed(const Duration(seconds: 2), () {
-            if (context.mounted) context.goNamed('map');
-          });
+        onPressed: () async {
+          final vm = context.read<ReportViewModel>();
+          final ok = await vm.reportIncident(typeCode);
+          if (!context.mounted) return;
+
+          if (ok) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('¡Gracias! Reporte de "$title" guardado.'),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            context.goNamed('map', queryParameters: {'reported': '1'});
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(vm.errorMessage ?? 'Error al enviar reporte'),
+                backgroundColor: AppColors.criticalRed,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
         },
         icon: Icon(icon, color: Colors.white, size: 28),
         label: Text(

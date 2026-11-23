@@ -2,7 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/session/session_controller.dart';
 import 'route_access.dart';
-
+import '../features/fleet/presentation/viewmodels/fleet_viewmodel.dart';
 import '../features/auth/presentation/views/auth_view.dart';
 import '../features/auth/presentation/views/register_view.dart';
 import '../features/dashboard/presentation/views/dashboard_view.dart';
@@ -91,7 +91,10 @@ GoRouter createRouter(SessionController session) {
       GoRoute(
         path: '/truck-detail',
         name: 'truckDetail',
-        builder: (context, state) => const TruckDetailView(),
+        builder: (context, state) {
+          final truck = state.extra is Truck ? state.extra as Truck : null;
+          return TruckDetailView(truck: truck);
+        },
       ),
       GoRoute(
         path: '/settings',

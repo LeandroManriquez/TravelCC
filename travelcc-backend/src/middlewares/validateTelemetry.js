@@ -13,7 +13,10 @@ const telemetryPointSchema = z.object({
 // Esquema principal que permite recibir un punto único o un arreglo (Batching por cortes de 4G)
 const telemetryPayloadSchema = z.union([
   telemetryPointSchema,
-  z.array(telemetryPointSchema).min(1, 'El lote no puede estar vacío')
+  z
+    .array(telemetryPointSchema)
+    .min(1, 'El lote no puede estar vacío')
+    .max(50, 'El lote no puede superar los 50 puntos por envío')
 ]);
 
 const validateTelemetry = (req, res, next) => {

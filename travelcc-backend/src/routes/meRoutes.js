@@ -16,8 +16,15 @@ const updateProfileSchema = z.strictObject({
     .trim()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
     .max(100, 'El nombre es demasiado largo')
+    .optional(),
+  phone: z
+    .string()
+    .trim()
+    .min(8, 'El teléfono debe tener al menos 8 dígitos')
+    .max(20, 'El teléfono es demasiado largo')
+    .nullable()
+    .optional()
 });
-
 const truckSchema = z.strictObject({
   plate: z
     .string()
@@ -90,11 +97,15 @@ router.get('/', protect, requireRole(), async (req, res, next) => {
 // PATCH /api/v1/me -> El usuario edita sus propios datos (solo el nombre).
 router.patch('/', protect, requireRole(), validateBody(updateProfileSchema), async (req, res, next) => {
   try {
+    const updates = {};
+    if (req.body.full_name !== undefined) updates.full_name = req.body.full_name;
+    if (req.body.phone !== undefined) updates.phone = req.body.phone;
+
     const { data: updated, error } = await supabase
       .from('profiles')
-      .update({ full_name: req.body.full_name })
+      .update(updates)
       .eq('id', req.profile.id)
-      .select('id, full_name, role, fleet_id')
+      .select('id, full_name, phone, role, fleet_id')
       .single();
 
     if (error) {

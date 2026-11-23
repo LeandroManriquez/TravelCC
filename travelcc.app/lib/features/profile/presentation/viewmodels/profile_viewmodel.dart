@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/network/travel_api.dart';
-
 class ProfileViewModel extends ChangeNotifier {
   bool isLoading = true;
   String? errorMessage;
 
   String driverName = 'Conductor';
   String email = '';
+  String phone = '';
   String shortId = '---';
   String? fleetName;
   String? fleetId;
@@ -18,7 +18,11 @@ class ProfileViewModel extends ChangeNotifier {
   String unitDimensions = 'No configuradas';
 
   String? linkCode;
+  DateTime? linkCodeExpiresAt;
   bool isGeneratingCode = false;
+  bool isLeavingFleet = false;
+
+  bool get isInFleet => fleetId != null && fleetId!.isNotEmpty;
 
   ProfileViewModel() {
     loadProfile();
@@ -34,7 +38,11 @@ class ProfileViewModel extends ChangeNotifier {
       final data = (res['data'] as Map<String, dynamic>?) ?? {};
 
       driverName = data['full_name']?.toString() ?? 'Conductor';
-      email = data['email']?.toString() ?? '';
+      email = data['email']?.toString() ??
+          Supabase.instance.client.auth.currentUser?.email ??
+          '';
+      phone = data['phone']?.toString() ?? '';
+
       final fullId = data['id']?.toString() ?? '';
       shortId = fullId.length >= 8
           ? fullId.substring(0, 8).toUpperCase()
@@ -42,7 +50,12 @@ class ProfileViewModel extends ChangeNotifier {
 
       final fleet = data['fleet'] as Map<String, dynamic>?;
       fleetName = fleet?['name']?.toString();
-      fleetId = fleet?['id']?.toString();
+      fleetId = fleet?['id']?.toString() ?? data['fleet_id']?.toString();
+
+      if (isInFleet) {
+        linkCode = null;
+        linkCodeExpiresAt = null;
+      }
 
       final trucks = (data['trucks'] as List<dynamic>?) ?? [];
       if (trucks.isNotEmpty && trucks.first is Map<String, dynamic>) {
@@ -67,16 +80,36 @@ class ProfileViewModel extends ChangeNotifier {
   }
 
   Future<String?> updateName(String newName) async {
+    final trimmed = newName.trim();
+    if (trimmed.isEmpty) return 'El nombre no puede estar vacío.';
+
     try {
-      final res = await TravelApi.patch('/me', {'full_name': newName.trim()});
+      final res = await TravelApi.patch('/me', {'full_name': trimmed});
       final updated = (res['data'] as Map<String, dynamic>?) ?? {};
-      driverName = updated['full_name']?.toString() ?? newName.trim();
+      driverName = updated['full_name']?.toString() ?? trimmed;
       notifyListeners();
       return null;
     } on TravelApiException catch (e) {
       return e.message;
     } catch (_) {
       return 'Error al actualizar nombre.';
+    }
+  }
+
+  Future<String?> updatePhone(String newPhone) async {
+    final trimmed = newPhone.trim();
+    if (trimmed.isEmpty) return 'Ingresa un número de teléfono válido.';
+
+    try {
+      final res = await TravelApi.patch('/me', {'phone': trimmed});
+      final updated = (res['data'] as Map<String, dynamic>?) ?? {};
+      phone = updated['phone']?.toString() ?? trimmed;
+      notifyListeners();
+      return null;
+    } on TravelApiException catch (e) {
+      return e.message;
+    } catch (_) {
+      return 'Error al actualizar el teléfono.';
     }
   }
 
@@ -88,9 +121,16 @@ class ProfileViewModel extends ChangeNotifier {
       final res = await TravelApi.post('/me/link-code');
       final data = (res['data'] as Map<String, dynamic>?) ?? {};
       linkCode = data['code']?.toString();
-      return linkCode;
+
+      final rawExpiry = data['expires_at']?.toString();
+      linkCodeExpiresAt =
+          rawExpiry != null ? DateTime.tryParse(rawExpiry)?.toLocal() : null;
+
+      return null;
     } on TravelApiException catch (e) {
-      throw Exception(e.message);
+      return e.message;
+    } catch (_) {
+      return 'No se pudo generar el código de enlace.';
     } finally {
       isGeneratingCode = false;
       notifyListeners();
@@ -98,14 +138,24 @@ class ProfileViewModel extends ChangeNotifier {
   }
 
   Future<String?> leaveFleet() async {
+    isLeavingFleet = true;
+    notifyListeners();
+
     try {
       await TravelApi.post('/me/leave-fleet');
+      fleetId = null;
+      fleetName = null;
+      linkCode = null;
+      linkCodeExpiresAt = null;
       await loadProfile();
       return null;
     } on TravelApiException catch (e) {
       return e.message;
     } catch (_) {
       return 'No se pudo salir de la flota.';
+    } finally {
+      isLeavingFleet = false;
+      notifyListeners();
     }
   }
 

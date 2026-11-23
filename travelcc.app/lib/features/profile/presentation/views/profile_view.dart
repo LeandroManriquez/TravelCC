@@ -225,22 +225,16 @@ class ProfileView extends StatelessWidget {
                               onPressed: vm.isGeneratingCode
                                   ? null
                                   : () async {
-                                      try {
-                                        await vm.generateLinkCode();
-                                      } catch (e) {
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                e.toString().replaceFirst(
-                                                    'Exception: ', ''),
-                                              ),
-                                              backgroundColor:
-                                                  AppColors.criticalRed,
-                                            ),
-                                          );
-                                        }
+                                      final err = await vm.generateLinkCode();
+                                      if (err != null && context.mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(err),
+                                            backgroundColor:
+                                                AppColors.criticalRed,
+                                          ),
+                                        );
                                       }
                                     },
                               icon: const Icon(Icons.qr_code_2),
@@ -249,34 +243,6 @@ class ProfileView extends StatelessWidget {
                               ),
                             ),
                           ),
-                        if (vm.fleetName != null) ...[
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: TextButton.icon(
-                              onPressed: () async {
-                                final err = await vm.leaveFleet();
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        err ?? 'Saliste de la flota',
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                              icon: const Icon(
-                                Icons.exit_to_app,
-                                color: AppColors.criticalRed,
-                              ),
-                              label: const Text(
-                                'Salir de la flota actual',
-                                style: TextStyle(color: AppColors.criticalRed),
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
@@ -295,6 +261,9 @@ class ProfileView extends StatelessWidget {
                             );
                           },
                   ),
+
+                  const SizedBox(height: AppSpacing.md),
+                  _buildPhoneField(context, vm),
 
                   const SizedBox(height: AppSpacing.md),
                   GestureDetector(
@@ -376,6 +345,45 @@ class ProfileView extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                  // Salir de la flota: abajo del todo, justo arriba de Cerrar Sesión
+                  if (vm.fleetName != null || vm.isInFleet) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: OutlinedButton.icon(
+                        onPressed: vm.isLeavingFleet
+                            ? null
+                            : () => _confirmAndLeaveFleet(context, vm),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppColors.criticalRed),
+                        ),
+                        icon: vm.isLeavingFleet
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.criticalRed,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.exit_to_app,
+                                color: AppColors.criticalRed,
+                              ),
+                        label: const Text(
+                          'Salir de la flota actual',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.criticalRed,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: AppSpacing.md),
                   SizedBox(
                     width: double.infinity,
@@ -457,6 +465,189 @@ class ProfileView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildPhoneField(BuildContext context, ProfileViewModel vm) {
+    final hasPhone = vm.phone.trim().isNotEmpty;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.panelDark,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'TELÉFONO DE CONTACTO',
+                  style: TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 10,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  hasPhone ? vm.phone : 'Sin teléfono registrado',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: hasPhone
+                        ? AppColors.textPrimary
+                        : AppColors.warningYellow,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton.icon(
+            onPressed: () => _showEditPhoneDialog(context, vm),
+            icon: Icon(
+              hasPhone ? Icons.edit : Icons.add_call,
+              size: 18,
+              color: AppColors.actionOrange,
+            ),
+            label: Text(
+              hasPhone ? 'Editar' : 'Registrar',
+              style: const TextStyle(
+                color: AppColors.actionOrange,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showEditPhoneDialog(
+    BuildContext context,
+    ProfileViewModel vm,
+  ) async {
+    final controller = TextEditingController(text: vm.phone);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.panelDark,
+        title: Text(
+          vm.phone.trim().isEmpty
+              ? 'Registrar Teléfono'
+              : 'Editar Teléfono',
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
+        content: TextField(
+          controller: controller,
+          keyboardType: TextInputType.phone,
+          style: const TextStyle(color: AppColors.textPrimary),
+          decoration: const InputDecoration(
+            labelText: 'Número de teléfono',
+            hintText: '+56 9 1234 5678',
+            labelStyle: TextStyle(color: AppColors.textMuted),
+            hintStyle: TextStyle(color: AppColors.textMuted),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+
+    if (saved == true && context.mounted) {
+      final err = await vm.updatePhone(controller.text);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err ?? 'Teléfono guardado'),
+            backgroundColor:
+                err == null ? AppColors.successGreen : AppColors.criticalRed,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmAndLeaveFleet(
+    BuildContext context,
+    ProfileViewModel vm,
+  ) async {
+    final firstConfirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.panelDark,
+        title: const Text(
+          'Salir de la flota actual',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: Text(
+          'Dejarás de pertenecer a ${vm.fleetName ?? 'tu flota actual'} y pasarás a Modo Libre.',
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Continuar'),
+          ),
+        ],
+      ),
+    );
+
+    if (firstConfirm != true || !context.mounted) return;
+
+    final secondConfirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.panelDark,
+        title: const Text(
+          'Confirmación final',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: const Text(
+          '¿Está seguro que quiere realizar esta acción?',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('No'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.criticalRed,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Sí, salir'),
+          ),
+        ],
+      ),
+    );
+
+    if (secondConfirm != true || !context.mounted) return;
+
+    final err = await vm.leaveFleet();
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(err ?? 'Saliste de la flota'),
+          backgroundColor:
+              err == null ? AppColors.successGreen : AppColors.criticalRed,
+        ),
+      );
+    }
   }
 
   Future<void> _showEditDialog(

@@ -186,7 +186,7 @@ class FleetView extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => context.goNamed('truckDetail'),
+                  onPressed: () => context.goNamed('truckDetail', extra: truck),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textPrimary,
                     side: const BorderSide(color: AppColors.buttonSmallBorder),

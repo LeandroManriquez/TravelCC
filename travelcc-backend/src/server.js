@@ -7,6 +7,7 @@ const routeRoutes = require('./routes/routeRoutes');
 const meRoutes = require('./routes/meRoutes');
 const fleetRoutes = require('./routes/fleetRoutes');
 const billingRoutes = require('./routes/billingRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 require('dotenv').config();
 
 const logger = require('./utils/logger');
@@ -53,7 +54,22 @@ app.get('/health', (req, res) => {
   });
 });
 
+// ...
+const telemetryLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minuto
+  max: 30, // Máximo 30 envíos por minuto por IP (1 cada 2 segundos)
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: 'fail',
+    error_code: 'ERR_TELEMETRY_RATE_LIMIT',
+    message: 'Demasiadas peticiones de telemetría. Intente en unos segundos.'
+  }
+});
+
+app.use('/api/v1/telemetry', telemetryLimiter, telemetryRoutes);  
 // 6. Rutas principales y manejador para rutas no encontradas (404)
+app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/me', meRoutes);
 app.use('/api/v1/fleet', fleetRoutes);
 app.use('/api/v1/billing', billingRoutes);
