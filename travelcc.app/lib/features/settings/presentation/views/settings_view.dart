@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../viewmodels/settings_viewmodel.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../viewmodels/settings_viewmodel.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -20,7 +20,13 @@ class SettingsView extends StatelessWidget {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-            onPressed: () => context.goNamed('map'),
+            onPressed: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                context.goNamed('map');
+              }
+            },
           ),
           title: const Text(
             'Configuración',
@@ -37,7 +43,6 @@ class SettingsView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Sección: Unidades y Medidas
                   const Text(
                     'UNIDADES Y MEDIDAS',
                     style: TextStyle(
@@ -130,9 +135,6 @@ class SettingsView extends StatelessWidget {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.actionOrange,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.zero),
-                        ),
                       ),
                       child: const Text(
                         'GUARDAR PREFERENCIAS',
@@ -230,8 +232,8 @@ class SettingsView extends StatelessWidget {
           Switch(
             value: value,
             onChanged: (_) => onChanged(),
-            activeColor: AppColors.actionOrange,
-            activeTrackColor: AppColors.actionOrange.withOpacity(0.3),
+            activeThumbColor: AppColors.actionOrange,
+            activeTrackColor: AppColors.actionOrange.withValues(alpha: 0.3),
           ),
         ],
       ),
@@ -331,7 +333,7 @@ class SettingsView extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.actionOrange.withOpacity(0.1)
+              ? AppColors.actionOrange.withValues(alpha: 0.1)
               : Colors.transparent,
           border: Border.all(
             color: isSelected
@@ -349,7 +351,10 @@ class SettingsView extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                ),
               ),
             ),
             if (isSelected)

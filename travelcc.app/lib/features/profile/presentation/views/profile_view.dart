@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../viewmodels/profile_viewmodel.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../viewmodels/profile_viewmodel.dart';
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
@@ -20,7 +21,13 @@ class ProfileView extends StatelessWidget {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-            onPressed: () => context.goNamed('driverMenu'),
+            onPressed: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              } else {
+                context.goNamed('driverMenu');
+              }
+            },
           ),
           title: const Text(
             'Mi Perfil',
@@ -32,11 +39,16 @@ class ProfileView extends StatelessWidget {
         ),
         body: Consumer<ProfileViewModel>(
           builder: (context, vm, child) {
+            if (vm.isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.actionOrange),
+              );
+            }
+
             return SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 children: [
-                  // Conductor asignado
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
@@ -50,8 +62,8 @@ class ProfileView extends StatelessWidget {
                     child: Row(
                       children: [
                         Container(
-                          width: 70,
-                          height: 70,
+                          width: 64,
+                          height: 64,
                           decoration: BoxDecoration(
                             color: AppColors.backgroundDark,
                             borderRadius: BorderRadius.circular(8),
@@ -72,7 +84,7 @@ class ProfileView extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'CONDUCTOR ASIGNADO',
+                                'CONDUCTOR TRAVELCC',
                                 style: TextStyle(
                                   color: AppColors.textMuted,
                                   fontSize: 10,
@@ -82,6 +94,8 @@ class ProfileView extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 vm.driverName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   color: AppColors.textPrimary,
                                   fontSize: 20,
@@ -89,7 +103,7 @@ class ProfileView extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                'ID Flota: ${vm.fleetId}',
+                                'ID Corto: ${vm.shortId}',
                                 style: const TextStyle(
                                   color: AppColors.textMuted,
                                   fontSize: 12,
@@ -103,205 +117,276 @@ class ProfileView extends StatelessWidget {
                   ),
 
                   const SizedBox(height: AppSpacing.md),
-                  // Odómetro
+                  // Código de Enlace Compartible
                   Container(
+                    width: double.infinity,
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
                       color: AppColors.panelDark,
                       borderRadius: BorderRadius.circular(AppSpacing.md),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: AppColors.backgroundDark,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.route,
-                            color: AppColors.actionOrange,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'KILÓMETROS EN',
-                                style: TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 10,
-                                ),
-                              ),
-                              const Text(
-                                'Odómetro',
-                                style: TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              vm.formatOdometer(vm.odometer),
-                              style: const TextStyle(
-                                color: AppColors.actionOrange,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Text(
-                              'km totales',
-                              style: TextStyle(
-                                color: AppColors.textMuted,
-                                fontSize: 10,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: AppSpacing.md),
-                  // Datos Operativos
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: AppColors.panelDark,
-                      borderRadius: BorderRadius.circular(AppSpacing.md),
+                      border: Border.all(color: AppColors.buttonSmallBorder),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
-                          children: [
-                            Icon(
-                              Icons.badge,
-                              color: AppColors.actionOrange,
-                              size: 20,
+                        const Text(
+                          'ENLACE CON JEFE DE FLOTA',
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 10,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          vm.fleetName != null
+                              ? 'Flota actual: ${vm.fleetName}'
+                              : 'Actualmente sin flota (Modo Libre)',
+                          style: TextStyle(
+                            color: vm.fleetName != null
+                                ? AppColors.successGreen
+                                : AppColors.warningYellow,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        if (vm.linkCode != null) ...[
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
                             ),
-                            SizedBox(width: 8),
-                            Text(
-                              'Datos Operativos',
-                              style: TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                            decoration: BoxDecoration(
+                              color: AppColors.backgroundDark,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.actionOrange),
+                            ),
+                            child: Center(
+                              child: Text(
+                                vm.linkCode!,
+                                style: const TextStyle(
+                                  color: AppColors.actionOrange,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 3,
+                                ),
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        _buildDataField('RUT DOCUMENTO', vm.rut, Icons.copy),
-                        const SizedBox(height: AppSpacing.sm),
-                        _buildDataField(
-                          'LICENCIA DE CONDUCIR',
-                          vm.license,
-                          null,
-                          extra: 'VENCE ${vm.licenseExpiry}',
-                          extraColor: AppColors.warningYellow,
-                        ),
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    Clipboard.setData(
+                                      ClipboardData(text: vm.linkCode!),
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Código copiado'),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.copy, size: 18),
+                                  label: const Text('Copiar Código'),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    final shareMsg =
+                                        'Hola, soy ${vm.driverName} en TravelCC. Mi código para enlazarme a tu flota es: ${vm.linkCode}';
+                                    Clipboard.setData(
+                                      ClipboardData(text: shareMsg),
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Mensaje listo para pegar en WhatsApp / Chat',
+                                        ),
+                                        backgroundColor: AppColors.successGreen,
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.share, size: 18),
+                                  label: const Text('Compartir'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: vm.isGeneratingCode
+                                  ? null
+                                  : () async {
+                                      try {
+                                        await vm.generateLinkCode();
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                e.toString().replaceFirst(
+                                                    'Exception: ', ''),
+                                              ),
+                                              backgroundColor:
+                                                  AppColors.criticalRed,
+                                            ),
+                                          );
+                                        }
+                                      }
+                                    },
+                              icon: const Icon(Icons.qr_code_2),
+                              label: const Text(
+                                'Generar Código de Enlace (8 dígitos)',
+                              ),
+                            ),
+                          ),
+                        if (vm.fleetName != null) ...[
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: TextButton.icon(
+                              onPressed: () async {
+                                final err = await vm.leaveFleet();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        err ?? 'Saliste de la flota',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              icon: const Icon(
+                                Icons.exit_to_app,
+                                color: AppColors.criticalRed,
+                              ),
+                              label: const Text(
+                                'Salir de la flota actual',
+                                style: TextStyle(color: AppColors.criticalRed),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
 
                   const SizedBox(height: AppSpacing.md),
-                  // Unidad asignada
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
-                      color: AppColors.panelDark,
-                      borderRadius: BorderRadius.circular(AppSpacing.md),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: AppColors.backgroundDark,
-                            borderRadius: BorderRadius.circular(8),
+                  _buildDataField(
+                    'CORREO REGISTRADO',
+                    vm.email.isEmpty ? 'Sin correo' : vm.email,
+                    Icons.copy,
+                    onCopy: vm.email.isEmpty
+                        ? null
+                        : () {
+                            Clipboard.setData(ClipboardData(text: vm.email));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Correo copiado')),
+                            );
+                          },
+                  ),
+
+                  const SizedBox(height: AppSpacing.md),
+                  GestureDetector(
+                    onTap: () => context.goNamed('vehicle'),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.panelDark,
+                        borderRadius: BorderRadius.circular(AppSpacing.md),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: AppColors.backgroundDark,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.local_shipping,
+                              color: AppColors.actionOrange,
+                              size: 28,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.local_shipping,
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'UNIDAD ASIGNADA',
+                                  style: TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                                Text(
+                                  vm.assignedUnit,
+                                  style: const TextStyle(
+                                    color: AppColors.textPrimary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  vm.unitDimensions,
+                                  style: const TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(
+                            Icons.chevron_right,
                             color: AppColors.textMuted,
-                            size: 28,
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'UNIDAD ASIGNADA',
-                                style: TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 10,
-                                ),
-                              ),
-                              Text(
-                                vm.assignedUnit,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Patente: ${vm.unitPatent}',
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 
                   const SizedBox(height: AppSpacing.xl),
-                  // Botón Editar
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 54,
                     child: ElevatedButton.icon(
-                      onPressed: vm.toggleEdit,
+                      onPressed: () => _showEditDialog(context, vm),
                       icon: const Icon(Icons.edit, color: Colors.white),
                       label: const Text(
-                        'Editar Perfil',
+                        'Editar Nombre',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.actionOrange,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.md),
-                        ),
-                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  // Botón Cerrar Sesión
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 54,
                     child: OutlinedButton.icon(
-                      onPressed: vm.logout,
+                      onPressed: () async {
+                        await vm.logout();
+                        if (context.mounted) {
+                          context.goNamed('login');
+                        }
+                      },
                       icon: const Icon(
                         Icons.logout,
                         color: AppColors.textPrimary,
@@ -314,39 +399,7 @@ class ProfileView extends StatelessWidget {
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(
-                          color: AppColors.buttonSmallBorder,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.md),
-                        ),
-                      ),
                     ),
-                  ),
-
-                  const SizedBox(height: AppSpacing.xl),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.actionOrange,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'TERMINAL CONECTADA • SYNC ${vm.syncTime}',
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 10,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -361,13 +414,12 @@ class ProfileView extends StatelessWidget {
     String label,
     String value,
     IconData? icon, {
-    String? extra,
-    Color extraColor = AppColors.textPrimary,
+    VoidCallback? onCopy,
   }) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.backgroundDark,
+        color: AppColors.panelDark,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -387,41 +439,71 @@ class ProfileView extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   value,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: AppColors.textPrimary,
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
           ),
-          if (extra != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const Text(
-                  'VENCE',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 10),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  extra,
-                  style: TextStyle(
-                    color: extraColor,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          if (icon != null)
+          if (icon != null && onCopy != null)
             IconButton(
               icon: Icon(icon, color: AppColors.textMuted, size: 20),
-              onPressed: () {},
+              onPressed: onCopy,
             ),
         ],
       ),
     );
+  }
+
+  Future<void> _showEditDialog(
+    BuildContext context,
+    ProfileViewModel vm,
+  ) async {
+    final controller = TextEditingController(text: vm.driverName);
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.panelDark,
+        title: const Text(
+          'Editar Nombre',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: AppColors.textPrimary),
+          decoration: const InputDecoration(
+            labelText: 'Nombre completo',
+            labelStyle: TextStyle(color: AppColors.textMuted),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+
+    if (saved == true && controller.text.trim().length >= 2) {
+      final err = await vm.updateName(controller.text);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err ?? 'Perfil actualizado'),
+            backgroundColor:
+                err == null ? AppColors.successGreen : AppColors.criticalRed,
+          ),
+        );
+      }
+    }
   }
 }

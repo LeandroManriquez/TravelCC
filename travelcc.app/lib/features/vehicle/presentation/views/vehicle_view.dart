@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../viewmodels/vehicle_viewmodel.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../viewmodels/vehicle_viewmodel.dart';
 
 class VehicleView extends StatelessWidget {
   const VehicleView({super.key});
@@ -20,7 +20,7 @@ class VehicleView extends StatelessWidget {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-            onPressed: () => context.goNamed('dashboard'),
+            onPressed: () => context.goNamed('map'),
           ),
           title: const Text(
             'Configurar Camión',
@@ -38,11 +38,34 @@ class VehicleView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'DIMENSIONES DEL VEHÍCULO',
+                    'IDENTIFICACIÓN Y DIMENSIONES',
                     style: TextStyle(
                       color: AppColors.textMuted,
                       fontSize: 12,
                       letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: viewModel.plateController,
+                    textCapitalization: TextCapitalization.characters,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Patente del Camión (ej: ABCD-12)',
+                      labelStyle: TextStyle(color: AppColors.textMuted),
+                      prefixIcon: Icon(
+                        Icons.badge,
+                        color: AppColors.actionOrange,
+                      ),
+                      filled: true,
+                      fillColor: AppColors.panelDark,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.zero),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -103,7 +126,7 @@ class VehicleView extends StatelessWidget {
                           child: Center(
                             child: Text(
                               '$ejes',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -153,20 +176,23 @@ class VehicleView extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: viewModel.isLoading
                           ? null
-                          : () {
-                              viewModel.saveVehicleDimensions();
+                          : () async {
+                              final err =
+                                  await viewModel.saveVehicleDimensions();
+                              if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('¡Configuración guardada!'),
-                                  backgroundColor: AppColors.successGreen,
+                                SnackBar(
+                                  content: Text(
+                                    err ?? '¡Camión guardado en tu cuenta!',
+                                  ),
+                                  backgroundColor: err == null
+                                      ? AppColors.successGreen
+                                      : AppColors.criticalRed,
                                 ),
                               );
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.actionOrange,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.zero),
-                        ),
                       ),
                       child: viewModel.isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
@@ -196,7 +222,7 @@ class VehicleView extends StatelessWidget {
   ) {
     return TextFormField(
       controller: controller,
-      keyboardType: TextInputType.number,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
       style: const TextStyle(color: AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: label,
@@ -234,8 +260,8 @@ class VehicleView extends StatelessWidget {
           Switch(
             value: value,
             onChanged: (_) => onChanged(),
-            activeColor: activeColor,
-            activeTrackColor: activeColor.withOpacity(0.3),
+            activeThumbColor: activeColor,
+            activeTrackColor: activeColor.withValues(alpha: 0.3),
           ),
         ],
       ),

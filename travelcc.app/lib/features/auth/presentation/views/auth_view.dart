@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../viewmodels/auth_viewmodel.dart';
+import '../../../../core/session/session_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 
@@ -12,7 +13,7 @@ class AuthView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AuthViewModel(),
+      create: (context) => AuthViewModel(context.read<SessionController>()),
       child: Scaffold(
         backgroundColor: AppColors.backgroundDark,
         body: SafeArea(
@@ -81,78 +82,15 @@ class AuthView extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xxl),
 
-                    // Selector de Rol
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: AppColors.panelDark,
-                        borderRadius: BorderRadius.circular(AppSpacing.md),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => viewModel.selectRole('usuario'),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: viewModel.selectedRole == 'usuario'
-                                      ? AppColors.actionOrange
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(
-                                    AppSpacing.sm,
-                                  ),
-                                ),
-                                child: const Text(
-                                  'USUARIO',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => viewModel.selectRole('empresa'),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: viewModel.selectedRole == 'empresa'
-                                      ? AppColors.actionOrange
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(
-                                    AppSpacing.sm,
-                                  ),
-                                ),
-                                child: const Text(
-                                  'EMPRESA',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-
-                    // Campo ID
+                    // Campo correo
                     TextFormField(
-                      controller: viewModel.idController,
+                      controller: viewModel.emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      autocorrect: false,
+                      textInputAction: TextInputAction.next,
                       style: const TextStyle(color: AppColors.textPrimary),
                       decoration: const InputDecoration(
-                        labelText: 'IDENTIFICADOR DE FLOTA / RUT',
+                        labelText: 'CORREO ELECTRÓNICO',
                         labelStyle: TextStyle(color: AppColors.textMuted),
                         filled: true,
                         fillColor: AppColors.panelDark,
@@ -169,18 +107,25 @@ class AuthView extends StatelessWidget {
                     // Campo Contraseña
                     TextFormField(
                       controller: viewModel.passwordController,
-                      obscureText: true,
+                      obscureText: viewModel.obscurePassword,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => viewModel.onLogin(),
                       style: const TextStyle(color: AppColors.textPrimary),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'CONTRASEÑA',
-                        labelStyle: TextStyle(color: AppColors.textMuted),
+                        labelStyle: const TextStyle(color: AppColors.textMuted),
                         filled: true,
                         fillColor: AppColors.panelDark,
-                        suffixIcon: Icon(
-                          Icons.visibility_off,
-                          color: AppColors.textMuted,
+                        suffixIcon: IconButton(
+                          onPressed: viewModel.togglePasswordVisibility,
+                          icon: Icon(
+                            viewModel.obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: AppColors.textMuted,
+                          ),
                         ),
-                        border: OutlineInputBorder(
+                        border: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.zero),
                           borderSide: BorderSide.none,
                         ),
@@ -188,37 +133,45 @@ class AuthView extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.md),
 
-                    // Recordar
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: viewModel.rememberMe,
-                          onChanged: (_) => viewModel.toggleRememberMe(),
-                          activeColor: AppColors.actionOrange,
-                        ),
-                        const Text(
-                          'Recordar en esta cabina',
-                          style: TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 12,
+                    // Mensaje de error
+                    if (viewModel.errorMessage != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.criticalRed.withOpacity(0.1),
+                          border: Border.all(
+                            color: AppColors.criticalRed.withOpacity(0.4),
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: AppColors.criticalRed,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                viewModel.errorMessage!,
+                                style: const TextStyle(
+                                  color: AppColors.criticalRed,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+                    const SizedBox(height: AppSpacing.md),
 
                     // Botón Ingresar
                     SizedBox(
                       height: 56,
                       child: ElevatedButton(
-                        onPressed: viewModel.isLoading
-                            ? null
-                            : () async {
-                                await viewModel.onLogin();
-                                if (context.mounted) {
-                                  context.goNamed('dashboard');
-                                }
-                              },
+                        onPressed: viewModel.isLoading ? null : viewModel.onLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.actionOrange,
                           foregroundColor: Colors.white,
@@ -253,33 +206,13 @@ class AuthView extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.md),
 
-                    // Huella / Face ID
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.fingerprint,
-                        color: AppColors.textPrimary,
-                      ),
-                      label: const Text(
-                        'Ingresar con Huella / Face ID',
-                        style: TextStyle(color: AppColors.textPrimary),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(
-                          color: AppColors.buttonSmallBorder,
-                        ),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.zero),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                    ),
+                    // (Ingreso con huella / Face ID: pendiente de implementar)
                     const SizedBox(height: AppSpacing.xxl),
 
                     // Crear cuenta
                     Center(
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () => context.pushNamed('register'),
                         child: const Text(
                           '¿Nuevo transportista o flota? Crear una nueva cuenta',
                           style: TextStyle(

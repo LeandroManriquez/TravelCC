@@ -1,0 +1,58 @@
+# Dependencias
+node_modules/
+
+# Variables de entorno y secretos (¡nunca subir a GitHub!)
+.env
+.env.*
+!.env.example
+
+# Logs y archivos temporales
+logs/
+*.log
+
+# Sistema operativo / editores
+.DS_Store
+Thumbs.db
+*.class
+*.pyc
+*.swp
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+.gradle/
+local.properties
+
+# VS Code (descomenta si no quieres subir tu configuración local)
+#.vscode/
+
+# Flutter/Dart/Pub (sin barra inicial para que aplique dentro de la subcarpeta de la app)
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+coverage/
+
+# Symbolication & Obfuscation
+app.*.symbols
+app.*.map.json
+
+# Build artifacts de Android
+android/app/debug/
+android/app/profile/
+android/app/release/
+
+# Widget Preview
+.widget_preview/

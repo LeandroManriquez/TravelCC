@@ -1,90 +1,143 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../viewmodels/fleet_viewmodel.dart';
 
 class FleetView extends StatelessWidget {
   const FleetView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => context.goNamed('dashboard'),
-        ),
-        title: const Text(
-          'Flota de Camiones',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
+    return ChangeNotifierProvider(
+      create: (_) => FleetViewModel(),
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundDark,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            onPressed: () => context.goNamed('dashboard'),
           ),
+          title: const Text(
+            'Flota de Camiones',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          actions: [
+            Consumer<FleetViewModel>(
+              builder: (context, vm, _) => IconButton(
+                icon: const Icon(Icons.person_add, color: AppColors.actionOrange),
+                tooltip: 'Enlazar conductor por código',
+                onPressed: () => _showLinkDialog(context, vm),
+              ),
+            ),
+          ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: AppColors.actionOrange),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Función de agregar camión en desarrollo'),
-                  backgroundColor: AppColors.panelDark,
+        body: Consumer<FleetViewModel>(
+          builder: (context, vm, _) {
+            if (vm.isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.actionOrange),
+              );
+            }
+
+            if (vm.errorMessage != null) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        vm.errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: AppColors.textPrimary),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: vm.loadTrucks,
+                        child: const Text('Reintentar'),
+                      ),
+                    ],
+                  ),
                 ),
               );
-            },
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        children: [
-          _buildTruckCard(
-            context,
-            'AB-12-34',
-            'Juan Pérez',
-            '4.2m / 25T / 12.5m',
-            'En ruta',
-            AppColors.successGreen,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _buildTruckCard(
-            context,
-            'CD-56-78',
-            'María González',
-            '3.8m / 18T / 10.0m',
-            'Disponible',
-            AppColors.secondary,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _buildTruckCard(
-            context,
-            'EF-90-12',
-            'Carlos Ruiz',
-            '4.5m / 30T / 14.0m',
-            'Alerta',
-            AppColors.criticalRed,
-          ),
-        ],
+            }
+
+            if (vm.trucks.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.local_shipping_outlined,
+                        size: 48,
+                        color: AppColors.textMuted,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Sin camiones en tu flota todavía',
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Enlaza un conductor usando su código de 8 caracteres para ver su camión aquí.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () => _showLinkDialog(context, vm),
+                        icon: const Icon(Icons.qr_code_2),
+                        label: const Text('Enlazar Conductor'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return RefreshIndicator(
+              color: AppColors.actionOrange,
+              onRefresh: vm.loadTrucks,
+              child: ListView.separated(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                itemCount: vm.trucks.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: AppSpacing.md),
+                itemBuilder: (context, index) {
+                  final truck = vm.trucks[index];
+                  return _buildTruckCard(context, truck);
+                },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildTruckCard(
-    BuildContext context,
-    String patente,
-    String conductor,
-    String medidas,
-    String estado,
-    Color estadoColor,
-  ) {
+  Widget _buildTruckCard(BuildContext context, Truck truck) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.panelDark,
+        borderRadius: BorderRadius.circular(AppSpacing.sm),
         border: Border.all(color: AppColors.buttonSmallBorder),
       ),
       child: Column(
@@ -94,7 +147,7 @@ class FleetView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                patente,
+                truck.plate,
                 style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 18,
@@ -104,13 +157,13 @@ class FleetView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: estadoColor.withOpacity(0.2),
+                  color: truck.statusColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  estado,
+                  truck.status,
                   style: TextStyle(
-                    color: estadoColor,
+                    color: truck.statusColor,
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
@@ -120,12 +173,12 @@ class FleetView extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            conductor,
+            truck.driver,
             style: const TextStyle(color: AppColors.textMuted, fontSize: 14),
           ),
           const SizedBox(height: 4),
           Text(
-            medidas,
+            truck.dimensions,
             style: const TextStyle(color: AppColors.textDisabled, fontSize: 12),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -137,9 +190,6 @@ class FleetView extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textPrimary,
                     side: const BorderSide(color: AppColors.buttonSmallBorder),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.zero),
-                    ),
                   ),
                   child: const Text('VER DETALLE'),
                 ),
@@ -149,5 +199,66 @@ class FleetView extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _showLinkDialog(BuildContext context, FleetViewModel vm) async {
+    final controller = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.panelDark,
+        title: const Text(
+          'Enlazar Conductor',
+          style: TextStyle(color: AppColors.textPrimary),
+        ),
+        content: TextField(
+          controller: controller,
+          textCapitalization: TextCapitalization.characters,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            letterSpacing: 2,
+          ),
+          decoration: const InputDecoration(
+            hintText: 'XXXX-XXXX',
+            hintStyle: TextStyle(color: AppColors.textMuted),
+            labelText: 'Código del conductor',
+            labelStyle: TextStyle(color: AppColors.textMuted),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Enlazar'),
+          ),
+        ],
+      ),
+    );
+
+    if (ok == true && controller.text.trim().isNotEmpty) {
+      try {
+        final msg = await vm.linkDriverByCode(controller.text);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(msg ?? 'Conductor enlazado'),
+              backgroundColor: AppColors.successGreen,
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceFirst('Exception: ', '')),
+              backgroundColor: AppColors.criticalRed,
+            ),
+          );
+        }
+      }
+    }
   }
 }
