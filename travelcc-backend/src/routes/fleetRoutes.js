@@ -63,7 +63,7 @@ router.post(
         .eq('code', code)
         .is('used_at', null)
         .gt('expires_at', nowIso)
-        .select('id, driver_id')
+        .select('code, driver_id')
         .maybeSingle();
 
       if (claimError) {
@@ -78,7 +78,7 @@ router.post(
         await supabase
           .from('driver_link_codes')
           .update({ used_at: null })
-          .eq('id', claimed.id);
+          .eq('code', claimed.code);
       };
 
       const { data: driver, error: driverError } = await supabase
